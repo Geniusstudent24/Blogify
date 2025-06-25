@@ -1,0 +1,19 @@
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+
+    socket.on("new-blog", ({ blogId, title }) => {
+        Swal.fire({
+            title: "🆕 New Blog Posted!",
+            text: `${title} has just been published.`,
+            icon: "info",
+            showCancelButton: true,
+            confirmButtonText: "Read Now",
+            cancelButtonText: "Later",
+        }).then(result => {
+            if (result.isConfirmed) {
+                window.location.href = `/blog/${blogId}`;
+            }
+        });
+    });
+</script>

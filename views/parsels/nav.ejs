@@ -1,0 +1,308 @@
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  integrity="sha512-..."
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+/>
+<link
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css"
+  rel="stylesheet"
+  integrity="sha384-TDdyH9DD6+Mk+5qKXn6vuV4jMv4Xr72Z0bT0eY50ZnDNjMiyP1BeGjZROk++m6E6"
+  crossorigin="anonymous"
+/>
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO"
+  crossorigin="anonymous"
+></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/user/home">
+      <i class="fas fa-feather-alt me-2"></i> Blogify
+    </a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" aria-current="page" href="/user/home">Home</a>
+        </li>
+        <% if (locals.user) { %>
+        <li class="nav-item">
+          <a class="nav-link" href="/blog/add">Add Blog</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            id="navbarUserDropdown"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            <% if (user.photo) { %>
+            <img
+              src="/<%= user.photo %>"
+              alt="Profile"
+              class="navbar-profile-photo me-2"
+            />
+            <% } else { %>
+            <i class="fas fa-user-circle me-2"></i> <% } %> <%= user.firstName
+            %>
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarUserDropdown">
+            <li><a class="dropdown-item" href="/user/profile">Profile</a></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a class="dropdown-item" id="logoutLink" href="/user/logout"
+                >Logout</a
+              >
+            </li>
+          </ul>
+        </li>
+        <% } else {%>
+        <li class="nav-item">
+          <a class="nav-link" href="/user/signup">Create Account</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/user/signin">Sign In</a>
+        </li>
+        <% } %>
+      </ul>
+      <form class="d-flex search-form" role="search">
+        <input
+          class="form-control me-2 search-input"
+          type="search"
+          placeholder="Search blogs..."
+          aria-label="Search"
+        />
+        <button class="btn btn-search" type="submit">
+          <i class="fas fa-search"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+</nav>
+
+<style>
+  :root {
+    --primary-color: #6a00ff;
+    --secondary-color: #a170ff;
+    --accent-color: #00d2ff;
+    --text-dark: #212529;
+    --text-muted: #6c757d;
+    --bg-light: #f0f2f5;
+    --bg-card: #ffffff;
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.15);
+    --button-gradient: linear-gradient(
+      45deg,
+      var(--primary-color),
+      var(--secondary-color)
+    );
+    --button-hover-gradient: linear-gradient(
+      45deg,
+      var(--secondary-color),
+      var(--primary-color)
+    );
+  }
+
+  .navbar {
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    padding: 0.8rem 1.5rem;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .navbar-brand {
+    font-family: "Montserrat", sans-serif;
+    font-weight: 800;
+    font-size: 1.8rem;
+    color: var(--primary-color) !important;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+  }
+  .navbar-brand:hover {
+    color: var(--secondary-color) !important;
+  }
+  .navbar-brand i {
+    font-size: 1.5rem;
+  }
+
+  .navbar-toggler {
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+  .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28106, 0, 255, 0.7%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+  }
+  .navbar-toggler:focus {
+    box-shadow: 0 0 0 0.25rem rgba(106, 0, 255, 0.25);
+  }
+
+  .navbar-nav .nav-link {
+    font-family: "Poppins", sans-serif;
+    font-weight: 500;
+    color: var(--text-dark) !important;
+    margin: 0 10px;
+    transition: color 0.3s ease, transform 0.2s ease;
+    position: relative;
+  }
+  .navbar-nav .nav-link:hover {
+    color: var(--primary-color) !important;
+    transform: translateY(-2px);
+  }
+  .navbar-nav .nav-link::after {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--primary-color);
+    transition: width 0.3s ease-in-out;
+  }
+  .navbar-nav .nav-link:hover::after,
+  .navbar-nav .nav-link.active::after {
+    width: 100%;
+  }
+  .navbar-nav .nav-link.active {
+    color: var(--primary-color) !important;
+    font-weight: 600;
+  }
+
+  .navbar-profile-photo {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-color);
+  }
+  .dropdown-menu {
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    border: none;
+    background-color: var(--bg-card);
+    padding: 10px 0;
+    animation: fadeIn 0.3s ease-out;
+  }
+  .dropdown-item {
+    color: var(--text-dark);
+    font-weight: 500;
+    padding: 10px 20px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .dropdown-item:hover {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  .dropdown-divider {
+    border-top-color: rgba(0, 0, 0, 0.1);
+    margin: 5px 0;
+  }
+
+  .search-form {
+    display: flex;
+    align-items: center;
+    margin-left: 20px;
+  }
+  .search-input {
+    border-radius: var(--border-radius-md);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 8px 15px;
+    transition: all 0.3s ease;
+    width: 200px;
+    font-size: 0.95rem;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  .search-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(106, 0, 255, 0.25),
+      inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  .btn-search {
+    background: var(--button-gradient);
+    border: none;
+    border-radius: var(--border-radius-md);
+    color: white;
+    padding: 8px 15px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+    margin-left: 8px;
+  }
+  .btn-search:hover {
+    background: var(--button-hover-gradient);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+  }
+  .btn-search:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 992px) {
+    .navbar {
+      padding: 0.7rem 1rem;
+    }
+    .navbar-brand {
+      font-size: 1.6rem;
+    }
+    .navbar-nav .nav-link {
+      margin: 5px 0;
+      padding: 8px 15px;
+    }
+    .navbar-collapse {
+      margin-top: 10px;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      padding-top: 10px;
+    }
+    .search-form {
+      width: 100%;
+      margin-left: 0;
+      margin-top: 15px;
+      justify-content: center;
+    }
+    .search-input {
+      width: 80%;
+      max-width: 300px;
+    }
+  }
+  @media (max-width: 576px) {
+    .navbar-brand {
+      font-size: 1.5rem;
+    }
+    .search-input {
+      width: 100%;
+    }
+  }
+</style>

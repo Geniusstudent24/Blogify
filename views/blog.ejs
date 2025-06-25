@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include('./parsels/head') %>
+    <title><%= bgs.title %> - Blog</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Open+Sans:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pN2txh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2j+E6uJm/x9sH/AnXhvI/zaXnlsg/t/Y+uQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --primary-color: #6a00ff;
+        --secondary-color: #a170ff;
+        --accent-color: #00d2ff;
+        --text-dark: #212529;
+        --text-muted: #6c757d;
+        --bg-light: #f8f9fa;
+        --bg-card: #ffffff;
+        --border-radius-lg: 15px;
+        --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.15);
+        --button-gradient: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        --button-hover-gradient: linear-gradient(
+          45deg,
+          var(--secondary-color),
+          var(--primary-color)
+        );
+      }
+
+      body {
+        font-family: "Open Sans", sans-serif;
+        background: var(--bg-light);
+        color: var(--text-dark);
+        line-height: 1.7;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+      }
+
+      .container {
+        max-width: 960px;
+        padding-left: 15px;
+        padding-right: 15px;
+      }
+
+      .blog-header {
+        background: var(--bg-card);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: 40px;
+        margin-top: 40px;
+        margin-bottom: 30px;
+        text-align: center;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .blog-title {
+        font-family: "Playfair Display", serif;
+        font-weight: 700;
+        font-size: 3.5rem;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        line-height: 1.1;
+        text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .blog-cover-image {
+        width: 100%;
+        max-height: 500px;
+        object-fit: cover;
+        border-radius: var(--border-radius-lg);
+        margin: 30px auto;
+        box-shadow: var(--shadow-sm);
+        transition: transform 0.5s ease-in-out;
+        display: block;
+      }
+      .blog-cover-image:hover {
+        transform: scale(1.01);
+      }
+
+      .blog-content {
+        background: var(--bg-card);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-sm);
+        padding: 40px;
+        margin-bottom: 40px;
+      }
+
+      .blog-content pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-family: "Open Sans", sans-serif;
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: var(--text-dark);
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        border: none;
+      }
+
+      .author-info {
+        background: var(--bg-card);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-sm);
+        padding: 25px;
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .author-info .profile-photo {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-color);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        flex-shrink: 0;
+      }
+      .author-info .author-details {
+        flex-grow: 1;
+      }
+      .author-info .author-name {
+        font-weight: 600;
+        font-size: 1.3rem;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+      }
+      .author-info .author-label {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-top: -5px;
+      }
+
+      .comments-section {
+        background: var(--bg-card);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-sm);
+        padding: 40px;
+        margin-bottom: 50px;
+      }
+
+      .comments-section h2 {
+        font-family: "Playfair Display", serif;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 30px;
+        font-size: 2rem;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+        padding-bottom: 15px;
+      }
+
+      .comment-form .form-control {
+        border-radius: 10px;
+        padding: 15px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+      }
+      .comment-form .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(106, 0, 255, 0.25);
+      }
+      .comment-form .btn-primary {
+        background: var(--button-gradient);
+        border: none;
+        border-radius: 25px;
+        padding: 10px 25px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-sm);
+        display: inline-block;
+      }
+      .comment-form .btn-primary:hover {
+        background: var(--button-hover-gradient);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
+      }
+      .comment-form .btn-primary:active {
+        transform: translateY(0);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .comment-list {
+        margin-top: 30px;
+      }
+      .comment-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 20px 0;
+        border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+      }
+      .comment-item:last-child {
+        border-bottom: none;
+      }
+      .comment-item .comment-photo {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .comment-item .comment-content-wrapper {
+        flex-grow: 1;
+      }
+      .comment-item .comment-author {
+        font-weight: 600;
+        color: var(--primary-color);
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+      }
+      .comment-item .comment-text {
+        font-size: 1rem;
+        color: var(--text-dark);
+        margin-bottom: 0;
+      }
+
+      @media (max-width: 992px) {
+        .blog-title {
+          font-size: 3rem;
+        }
+        .blog-header,
+        .blog-content,
+        .author-info,
+        .comments-section {
+          padding: 30px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .blog-title {
+          font-size: 2.5rem;
+        }
+        .blog-cover-image {
+          max-height: 350px;
+        }
+        .blog-content pre {
+          font-size: 1rem;
+          line-height: 1.7;
+        }
+        .author-info {
+          flex-direction: column;
+          text-align: center;
+          gap: 10px;
+        }
+        .author-info .profile-photo {
+          margin-bottom: 10px;
+        }
+        .comments-section h2 {
+          font-size: 1.8rem;
+        }
+
+        .comment-item {
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+        .comment-item .comment-photo {
+          margin-bottom: 10px;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .blog-title {
+          font-size: 2rem;
+        }
+        .blog-header,
+        .blog-content,
+        .author-info,
+        .comments-section {
+          padding: 20px;
+        }
+        .blog-cover-image {
+          max-height: 250px;
+        }
+        .author-info .profile-photo {
+          width: 60px;
+          height: 60px;
+        }
+        .author-info .author-name {
+          font-size: 1.1rem;
+        }
+        .comment-item .comment-photo {
+          width: 50px;
+          height: 50px;
+        }
+        .comment-item .comment-author {
+          font-size: 1rem;
+        }
+        .comment-item .comment-text {
+          font-size: 0.95rem;
+        }
+      }
+      #page-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+      }
+      .spinner {
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid var(--primary-color);
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .hidden {
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="page-loader">
+      <div class="spinner"></div>
+    </div>
+    <%- include('./parsels/nav') %>
+
+    <main class="flex-grow-1">
+      <div class="container">
+        <article class="blog-post">
+          <header
+            class="blog-header"
+            data-aos="fade-up"
+            data-aos-duration="1000"
+          >
+            <h1 class="blog-title"><%= bgs.title %></h1>
+            <img
+              src="<%= bgs.coverImage %>"
+              class="blog-cover-image"
+              alt="Cover image for <%= bgs.title %>"
+            />
+          </header>
+
+          <section
+            class="blog-content"
+            data-aos="fade-up"
+            data-aos-delay="200"
+            data-aos-duration="1000"
+          >
+            <pre><%= bgs.body %></pre>
+          </section>
+
+          <aside
+            class="author-info"
+            data-aos="fade-up"
+            data-aos-delay="300"
+            data-aos-duration="1000"
+          >
+            <img
+              src="/<%= bgs.createdBy.photo %>"
+              class="profile-photo"
+              alt="Profile photo of <%= bgs.createdBy.firstName %>"
+            />
+            <div class="author-details">
+              <div class="author-name"><%= bgs.createdBy.firstName %></div>
+              <div class="author-label">Author</div>
+            </div>
+          </aside>
+        </article>
+
+        <section
+          class="comments-section"
+          data-aos="fade-up"
+          data-aos-delay="400"
+          data-aos-duration="1000"
+        >
+          <h2>Comments (<%= comments.length %>)</h2>
+
+          <% if (locals.user) { %>
+          <form
+            class="comment-form mt-4"
+            action="/blog/comment/<%= bgs._id %>"
+            method="post"
+          >
+            <div class="mb-3">
+              <label for="commentContent" class="form-label visually-hidden"
+                >Enter your comment</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="commentContent"
+                name="content"
+                placeholder="Write your comment..."
+                aria-label="Write your comment"
+                required
+              />
+            </div>
+            <button class="btn btn-primary" type="submit">Add Comment</button>
+          </form>
+          <% } else { %>
+          <p class="text-center text-muted mt-4">Login to add a comment.</p>
+          <% } %>
+
+          <div class="comment-list mt-4">
+            <% if (comments && comments.length > 0) { %> <%
+            comments.forEach((comment, index) => { %>
+            <div
+              class="comment-item"
+              data-aos="fade-up"
+              data-aos-once="true"
+              data-aos-delay="<%= 50 * index %>"
+            >
+              <img
+                src="/<%= comment.createdBy.photo %>"
+                class="comment-photo"
+                alt="Profile photo of <%= comment.createdBy.firstName %>"
+              />
+              <div class="comment-content-wrapper">
+                <div class="comment-author">
+                  <%= comment.createdBy.firstName %>
+                </div>
+                <p class="comment-text"><%= comment.content %></p>
+              </div>
+            </div>
+            <% }) %> <% } else { %>
+            <p class="text-center text-muted">
+              No comments yet. Be the first to comment!
+            </p>
+            <% } %>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      AOS.init({
+        offset: 100,
+        delay: 0,
+        duration: 800,
+        easing: "ease-in-out",
+        once: true,
+        mirror: false,
+        anchorPlacement: "top-bottom",
+      });
+      // console.log(blog.title); // Removed this line as 'blog' is not defined in this scope
+      console.log("<%= bgs.title %>"); // Corrected to use bgs.title from EJS context
+
+      const currentBlogId = "<%= bgs._id %>";
+      // Corrected selector: changed from '#comments-list' to '.comment-list'
+      const commentsList = document.querySelector(".comment-list");
+      const commentForm = document.querySelector(".comment-form");
+      const commentContentInput = document.getElementById("commentContent");
+      const commentCountElement = document.getElementById("comments-count"); // Ensure this element exists if you want to update it
+      const loginToCommentMessage = document.getElementById(
+        "login-to-comment-message"
+      ); // Ensure this element exists if you want to hide it
+      const noCommentMessage = document.getElementById("no-comments-message"); // Ensure this element exists if you want to hide it
+
+      const socket = io();
+      socket.on("connect", () => {
+        console.log("socket connected...", socket.id);
+      });
+
+      socket.on("new-blog", (data) => {
+        Swal.fire({
+          title: `📝 New Blog: ${data.title}`,
+          icon: "success",
+          text: "Click to read",
+          draggable: true,
+          confirmButtonText: "View Blog",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.href = `/blog/${data.blogId}`;
+          }
+        });
+      });
+
+      socket.on("new-comment", (data) => {
+        if (data.blogId === currentBlogId) {
+          const newComment = data.comment;
+
+          const commentDiv = document.createElement("div");
+          commentDiv.classList.add("comment-item");
+          commentDiv.setAttribute("data-aos", "fade-up");
+          commentDiv.setAttribute("data-aos-once", "true");
+          commentDiv.setAttribute("data-aos-delay", "0");
+
+          commentDiv.innerHTML = `
+                        <img src = "/${newComment.createdBy.photo}" class = "comment-photo">
+                        <div class = "comment-content-wrapper">
+                            <div class = "comment-author">${newComment.createdBy.firstName}</div>
+                            <p class = "comment-text">${newComment.content}</p>
+                        </div>
+                    `;
+
+          if (commentsList) {
+            commentsList.prepend(commentDiv);
+          } else {
+            console.error("Error: commentsList element not found in DOM.");
+          }
+
+          if (noCommentMessage) {
+            noCommentMessage.style.display = "none";
+          }
+
+          if (loginToCommentMessage) {
+            loginToCommentMessage.style.display = "none";
+          }
+
+          if (commentCountElement) {
+            // Updated to safely get the current count and update the text content
+            const commentsSectionH2 = document.querySelector(
+              ".comments-section h2"
+            );
+            if (commentsSectionH2) {
+              const currentCountMatch =
+                commentsSectionH2.textContent.match(/\((\d+)\)/);
+              const currentCount = currentCountMatch
+                ? parseInt(currentCountMatch[1])
+                : 0;
+              commentsSectionH2.textContent = `Comments (${currentCount + 1})`;
+            }
+            AOS.refreshHard();
+          } else {
+            console.error("Error: commentCountElement not found in DOM.");
+          }
+        }
+      });
+
+      socket.on("disconnect", () => {
+        console.log("disconnected..");
+      });
+
+      if (commentForm) {
+        commentForm.addEventListener("submit", async function (event) {
+          event.preventDefault();
+          console.log("Form submitted!");
+
+          const content = commentContentInput.value;
+          if (!content.trim()) {
+            alert("Please enter a comment.");
+            return;
+          }
+
+          try {
+            const blogId = "<%= bgs._id %>";
+            const response = await fetch(`/blog/comment/${blogId}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ content: content }),
+            });
+
+            if (response.ok) {
+              commentContentInput.value = "";
+            } else {
+              try {
+                const errorData = await response.json();
+                alert(
+                  `Error: ${errorData.message || "Failed to submit comment."}`
+                );
+              } catch {
+                alert("Failed to submit comment.");
+              }
+            }
+          } catch (error) {
+            console.error("Comment submission failed:", error);
+          }
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const loader = document.getElementById("page-loader");
+        if (loader) {
+          loader.classList.add("hidden");
+          setTimeout(() => {
+            loader.style.display = "none";
+          }, 500);
+        }
+      });
+    </script>
+  </body>
+</html>
