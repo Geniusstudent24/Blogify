@@ -394,6 +394,7 @@
             data-aos-delay="300"
             data-aos-duration="1000"
           >
+          <% if (bgs.createdBy) { %>
             <img
               src="/<%= bgs.createdBy.photo %>"
               class="profile-photo"
@@ -403,6 +404,17 @@
               <div class="author-name"><%= bgs.createdBy.firstName %></div>
               <div class="author-label">Author</div>
             </div>
+         <% } else { %> 
+              <img
+                src="/images/default-profile.png" // सुनिश्चित करें कि यह डिफ़ॉल्ट इमेज आपके public फ़ोल्डर में है
+                class="profile-photo"
+                alt="Profile photo of Unknown Author"
+               />
+             <div class="author-details">
+              <div class="author-name">Unknown Author</div>
+              <div class="author-label">Author</div>
+            </div>
+         <% } %>
           </aside>
         </article>
 
@@ -449,24 +461,32 @@
               data-aos-once="true"
               data-aos-delay="<%= 50 * index %>"
             >
-              <img
-                src="/<%= comment.createdBy.photo %>"
-                class="comment-photo"
-                alt="Profile photo of <%= comment.createdBy.firstName %>"
-              />
-              <div class="comment-content-wrapper">
-                <div class="comment-author">
-                  <%= comment.createdBy.firstName %>
+              <% if (comment.createdBy) { %>
+                <img
+                  src="/<%= comment.createdBy.photo %>"
+                  class="comment-photo"
+                  alt="Profile photo of <%= comment.createdBy.firstName %>"
+                />
+              <% } else { %> 
+                <img
+                  src="/images/default-profile.png" 
+                  class="comment-photo"
+                  alt="Profile photo of Unknown User"
+                />
+              <% } %>
+                <div class="comment-content-wrapper">
+                  <div class="comment-author">
+                    <%= comment.createdBy.firstName %>
+                  </div>
+                  <p class="comment-text"><%= comment.content %></p>
                 </div>
-                <p class="comment-text"><%= comment.content %></p>
               </div>
+              <% }) %> <% } else { %>
+              <p class="text-center text-muted">
+                No comments yet. Be the first to comment!
+              </p>
+              <% } %>
             </div>
-            <% }) %> <% } else { %>
-            <p class="text-center text-muted">
-              No comments yet. Be the first to comment!
-            </p>
-            <% } %>
-          </div>
         </section>
       </div>
     </main>
