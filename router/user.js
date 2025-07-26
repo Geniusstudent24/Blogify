@@ -102,7 +102,6 @@ router.get("/home", async (req, res) => {
     return res.render("home", {
       user: req.user,
       bgls: allBlg,
-      flash: req.flash(),
     });
   } catch (error) {
     console.error("Error fetching blogs:", error);
