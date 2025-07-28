@@ -10,7 +10,7 @@ const blogSchem = new Schema({
         required: true,
     },
     coverImage: {
-        type: String,
+        type: Buffer,
         required: false
     },
     createdBy: {
