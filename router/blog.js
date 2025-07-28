@@ -1,7 +1,8 @@
 const { Router } = require("express");
 const router = Router();
 const multer = require("multer");
-const path = require("path");
+const AWS = require("aws-sdk");
+const multerS3 = require("multer-s3");
 const blogs = require("../model/blog");
 const comment = require("../model/comments");
 
@@ -11,12 +12,24 @@ function setIo(io) {
   ioInstance = io;
 }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.resolve("./public/upload/")),
-  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
 });
 
-const uploads = multer({ storage });
+const s3BucketName = process.env.S3_BUCKET_NAME;
+
+const uploads = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: s3BucketName,
+    acl: "public-read",
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString() + "-" + file.originalname);
+    },
+  }),
+});
 
 function isAuthenticated(req, res, next) {
   if (!req.user) return res.status(401).json({ message: "Unauthorized" });
@@ -32,8 +45,11 @@ router.get("/add", isAuthenticated, (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const blog = await blogs.findById(req.params.id).populate("createdBy", "firstName photo");
-    const comments = await comment.find({ blogId: req.params.id })
+    const blog = await blogs
+      .findById(req.params.id)
+      .populate("createdBy", "firstName photo");
+    const comments = await comment
+      .find({ blogId: req.params.id })
       .populate("createdBy", "firstName photo")
       .sort({ createdAt: -1 });
 
@@ -42,7 +58,6 @@ router.get("/:id", async (req, res) => {
       bgs: blog,
       comments,
     });
-
   } catch (error) {
     console.error("Error fetching blog or comments:", error);
     if (error.name === "CastError") {
@@ -60,7 +75,10 @@ router.post("/comment/:blogId", isAuthenticated, async (req, res) => {
       createdBy: req.user._id,
     });
 
-    const populatedComment = await newComment.populate("createdBy", "firstName photo");
+    const populatedComment = await newComment.populate(
+      "createdBy",
+      "firstName photo"
+    );
 
     ioInstance.emit("new-comment", {
       blogId: req.params.blogId,
@@ -82,25 +100,32 @@ router.post("/comment/:blogId", isAuthenticated, async (req, res) => {
   }
 });
 
-router.post("/", isAuthenticated, uploads.single("coverImage"), async (req, res) => {
-  try {
-    const { title, body } = req.body;
-    const Blog = await blogs.create({
-      body,
-      title,
-      createdBy: req.user._id,
-      coverImage: `/upload/${req.file.filename}`,
-    });
-    
-    ioInstance.emit("new-blog", {
-    title: Blog.title,
-    blogId: Blog._id,
-});
-    res.json({ success: true, redirect: '/' });
-  } catch (error) {
-    console.error("Error adding blog:", error);
-    res.status(500).json({ success: false, message: "Error occurred while adding blog." });
+router.post(
+  "/",
+  isAuthenticated,
+  uploads.single("coverImage"),
+  async (req, res) => {
+    try {
+      const { title, body } = req.body;
+      const Blog = await blogs.create({
+        body,
+        title,
+        createdBy: req.user._id,
+        coverImage: req.file.location,
+      });
+
+      ioInstance.emit("new-blog", {
+        title: Blog.title,
+        blogId: Blog._id,
+      });
+      res.json({ success: true, redirect: "/" });
+    } catch (error) {
+      console.error("Error adding blog:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Error occurred while adding blog." });
+    }
   }
-});
+);
 
 module.exports = { router, setIo };
