@@ -111,12 +111,13 @@ router.post(
   uploads.single("coverImage"),
   async (req, res) => {
     try {
-      const { title, body } = req.body;
+      const { title, body, category } = req.body;
       const Blog = await blogs.create({
         body,
         title,
         createdBy: req.user._id,
         coverImage: req.file.location,
+        category,
       });
 
       ioInstance.emit("new-blog", {
