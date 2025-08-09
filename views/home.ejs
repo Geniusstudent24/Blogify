@@ -482,13 +482,21 @@
 
     <div class="hero-section">
       <div class="container">
-        <h1 data-aos="fade-up" data-aos-duration="1200" data-aos-delay="0">
-          Discover Amazing Content
-        </h1>
-        <p data-aos="fade-up" data-aos-duration="1200" data-aos-delay="200">
-          Dive into a curated collection of our latest posts and creations. Each
-          entry is a journey waiting to be explored!
-        </p>
+        <div class="hero-section">
+          <div class="container">
+            <% if (typeof pageTitle !== 'undefined' && pageTitle) { %>
+            <h1 data-aos="fade-up"><%= pageTitle %></h1>
+            <p data-aos="fade-up" data-aos-delay="200">
+              All posts from the <%= pageTitle %> category.
+            </p>
+            <% } else { %>
+            <h1 data-aos="fade-up">Discover Amazing Content</h1>
+            <p data-aos="fade-up" data-aos-delay="200">
+              Dive into a curated collection of our latest posts and creations.
+            </p>
+            <% } %>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -513,7 +521,8 @@
             <div class="card-body">
               <h5 class="card-title"><%= bgl.title %></h5>
               <a href="/blog/<%= bgl._id %>" class="btn btn-primary mt-auto"
-                >View Details</a>
+                >View Details</a
+              >
             </div>
           </div>
         </div>

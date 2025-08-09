@@ -105,6 +105,25 @@ router.post("/comment/:blogId", isAuthenticated, async (req, res) => {
   }
 });
 
+router.get("/category/:categoryName", async (req, res) => {
+  try {
+    const categoryName = req.params.categoryName;
+    const blogsByCategory = await blogs
+      .find({ category: categoryName })
+      .populate("createdBy", "firstName photo")
+      .sort({ createdAt: -1 });
+
+    res.render("home", {
+      user: req.user,
+      blogs: blogsByCategory,
+      pageCategory: categoryName,
+    });
+  } catch (error) {
+    console.error("Error fetching blogs by category:", error);
+    res.redirect("/");
+  }
+});
+
 router.post(
   "/",
   isAuthenticated,
