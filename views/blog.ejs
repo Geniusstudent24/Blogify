@@ -385,7 +385,7 @@
             data-aos-delay="200"
             data-aos-duration="1000"
           >
-            <pre><%= bgs.body %></pre>
+            <div class="blog-post-content"><%- bgs.body %></div>
           </section>
 
           <aside
@@ -394,7 +394,7 @@
             data-aos-delay="300"
             data-aos-duration="1000"
           >
-          <% if (bgs.createdBy) { %>
+            <% if (bgs.createdBy) { %>
             <img
               src="/<%= bgs.createdBy.photo %>"
               class="profile-photo"
@@ -404,17 +404,17 @@
               <div class="author-name"><%= bgs.createdBy.firstName %></div>
               <div class="author-label">Author</div>
             </div>
-         <% } else { %> 
-              <img
-                src="images/profile.png" 
-                class="profile-photo"
-                alt="Profile photo of Unknown Author"
-               />
-             <div class="author-details">
+            <% } else { %>
+            <img
+              src="images/profile.png"
+              class="profile-photo"
+              alt="Profile photo of Unknown Author"
+            />
+            <div class="author-details">
               <div class="author-name">Unknown Author</div>
               <div class="author-label">Author</div>
             </div>
-         <% } %>
+            <% } %>
           </aside>
         </article>
 
@@ -462,31 +462,31 @@
               data-aos-delay="<%= 50 * index %>"
             >
               <% if (comment.createdBy) { %>
-                <img
-                  src="/<%= comment.createdBy.photo %>"
-                  class="comment-photo"
-                  alt="Profile photo of <%= comment.createdBy.firstName %>"
-                />
-              <% } else { %> 
-                <img
-                  src="images/profile.png" 
-                  class="comment-photo"
-                  alt="Profile photo of Unknown User"
-                />
+              <img
+                src="/<%= comment.createdBy.photo %>"
+                class="comment-photo"
+                alt="Profile photo of <%= comment.createdBy.firstName %>"
+              />
+              <% } else { %>
+              <img
+                src="images/profile.png"
+                class="comment-photo"
+                alt="Profile photo of Unknown User"
+              />
               <% } %>
-                <div class="comment-content-wrapper">
-                  <div class="comment-author">
-                    <%= comment.createdBy.firstName %>
-                  </div>
-                  <p class="comment-text"><%= comment.content %></p>
+              <div class="comment-content-wrapper">
+                <div class="comment-author">
+                  <%= comment.createdBy.firstName %>
                 </div>
+                <p class="comment-text"><%= comment.content %></p>
               </div>
-              <% }) %> <% } else { %>
-              <p class="text-center text-muted">
-                No comments yet. Be the first to comment!
-              </p>
-              <% } %>
             </div>
+            <% }) %> <% } else { %>
+            <p class="text-center text-muted">
+              No comments yet. Be the first to comment!
+            </p>
+            <% } %>
+          </div>
         </section>
       </div>
     </main>
