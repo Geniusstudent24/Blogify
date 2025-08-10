@@ -115,7 +115,7 @@ router.get("/category/:categoryName", async (req, res) => {
 
     res.render("home", {
       user: req.user,
-      blgs: blogsByCategory,
+      bgls: blogsByCategory,
       pageCategory: categoryName,
     });
   } catch (error) {
