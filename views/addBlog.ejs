@@ -482,15 +482,42 @@
     </script>
 
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        tinymce.init({
-          selector: "textarea#body",
-          plugins: "image link lists media table code help wordcount",
-          toolbar:
-            "undo redo | blocks | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image media | table | code | help",
-          height: 500,
-          menubar: false,
-        });
+      tinymce.init({
+        selector: "textarea#body",
+        plugins: "image link lists media table code help wordcount",
+        toolbar:
+          "undo redo | blocks | bold italic | alignleft aligncenter | bullist numlist | link image media",
+        height: 500,
+        menubar: false,
+
+        file_picker_types: "file image media",
+        file_picker_callback: (callback, value, meta) => {
+          const input = document.createElement("input");
+          input.setAttribute("type", "file");
+
+          input.setAttribute("accept", "application/pdf,image/*");
+
+          input.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            const formData = new FormData();
+            formData.append("file", file, file.name);
+
+            fetch("/blog/upload", {
+              method: "POST",
+              body: formData,
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                callback(data.location, { title: file.name });
+              })
+              .catch((err) => {
+                console.error("Upload Error:", err);
+                alert("File could not be uploaded.");
+              });
+          });
+
+          input.click();
+        },
       });
     </script>
   </body>
