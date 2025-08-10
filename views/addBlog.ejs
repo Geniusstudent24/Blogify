@@ -426,8 +426,9 @@
         form.addEventListener("submit", async (e) => {
           e.preventDefault();
 
-          const formData = new FormData(form);
+          tinymce.triggerSave();
 
+          const formData = new FormData(form);
           try {
             const res = await fetch("/blog", {
               method: "POST",
