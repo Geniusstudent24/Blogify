@@ -403,61 +403,99 @@
       src="https://cdn.tiny.cloud/1/2hg2ew1riep5p44bjfm7kmk4qzo0ffqj9gepk8pt9znufbfe/tinymce/7/tinymce.min.js"
       referrerpolicy="origin"
     ></script>
-
-    <script>
-      AOS.init({
-        offset: 100,
-        delay: 0,
-        duration: 800,
-        easing: "ease-in-out",
-        once: true,
-        mirror: false,
-        anchorPlacement: "top-bottom",
-      });
-    </script>
-
     <script src="/socket.io/socket.io.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const socket = io();
-        const form = document.getElementById("addBlogForm");
-
-        form.addEventListener("submit", async (e) => {
-          e.preventDefault();
-
-          tinymce.triggerSave();
-
-          const formData = new FormData(form);
-          try {
-            const res = await fetch("/blog", {
-              method: "POST",
-              body: formData,
+      document.addEventListener("DOMContentLoaded", function () {
+        // --- Initialize TinyMCE Editor ---
+        tinymce.init({
+          selector: "textarea#body",
+          plugins: "image link lists media table code help wordcount",
+          toolbar:
+            "undo redo | blocks | bold italic | alignleft aligncenter | bullist numlist | link image media",
+          height: 500,
+          menubar: false,
+          file_picker_types: "file image media",
+          file_picker_callback: (callback, value, meta) => {
+            const input = document.createElement("input");
+            input.setAttribute("type", "file");
+            input.setAttribute("accept", "application/pdf,image/*");
+            input.addEventListener("change", (e) => {
+              const file = e.target.files[0];
+              const formData = new FormData();
+              formData.append("file", file, file.name);
+              fetch("/blog/upload", {
+                method: "POST",
+                body: formData,
+              })
+                .then((res) => res.json())
+                .then((data) => {
+                  callback(data.location, { title: file.name });
+                })
+                .catch((err) => {
+                  console.error("Upload Error:", err);
+                  alert("File could not be uploaded.");
+                });
             });
-
-            const data = await res.json();
-
-            if (!res.ok || !data.success) {
-              throw new Error(data.message || "Blog not added");
-            }
-
-            socket.emit("new-blog", data.blog);
-
-            localStorage.setItem("blogAdded", "true");
-
-            window.location.href = "/";
-          } catch (err) {
-            Swal.fire({
-              title: "Error!",
-              text: err.message || "Something went wrong!",
-              icon: "error",
-            });
-          }
+            input.click();
+          },
         });
 
+        // --- Initialize AOS Animations ---
+        AOS.init({
+          offset: 100,
+          delay: 0,
+          duration: 800,
+          easing: "ease-in-out",
+          once: true,
+          mirror: false,
+          anchorPlacement: "top-bottom",
+        });
+
+        // --- Handle the Page Loader ---
+        const loader = document.getElementById("page-loader");
+        if (loader) {
+          loader.classList.add("hidden");
+          setTimeout(() => {
+            loader.style.display = "none";
+          }, 500);
+        }
+
+        // --- Handle Form Submission ---
+        const socket = io();
+        const form = document.getElementById("addBlogForm");
+        if (form) {
+          form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            tinymce.triggerSave(); // This is the important fix
+
+            const formData = new FormData(form);
+            try {
+              const res = await fetch("/blog", {
+                method: "POST",
+                body: formData,
+              });
+              const data = await res.json();
+              if (!res.ok || !data.success) {
+                throw new Error(data.message || "Blog not added");
+              }
+              socket.emit("new-blog", data.blog);
+              localStorage.setItem("blogAdded", "true");
+              window.location.href = "/";
+            } catch (err) {
+              Swal.fire({
+                title: "Error!",
+                text: err.message || "Something went wrong!",
+                icon: "error",
+              });
+            }
+          });
+        }
+
+        // --- Handle Custom File Input Display ---
         const coverImageInput = document.getElementById("coverImage");
         const fileNameDisplay = document.getElementById("fileNameDisplay");
-
         if (coverImageInput && fileNameDisplay) {
           coverImageInput.addEventListener("change", function () {
             if (this.files && this.files.length > 0) {
@@ -469,56 +507,6 @@
             }
           });
         }
-      });
-
-      document.addEventListener("DOMContentLoaded", function () {
-        const loader = document.getElementById("page-loader");
-        if (loader) {
-          loader.classList.add("hidden");
-          setTimeout(() => {
-            loader.style.display = "none";
-          }, 500);
-        }
-      });
-    </script>
-
-    <script>
-      tinymce.init({
-        selector: "textarea#body",
-        plugins: "image link lists media table code help wordcount",
-        toolbar:
-          "undo redo | blocks | bold italic | alignleft aligncenter | bullist numlist | link image media",
-        height: 500,
-        menubar: false,
-
-        file_picker_types: "file image media",
-        file_picker_callback: (callback, value, meta) => {
-          const input = document.createElement("input");
-          input.setAttribute("type", "file");
-
-          input.setAttribute("accept", "application/pdf,image/*");
-
-          input.addEventListener("change", (e) => {
-            const file = e.target.files[0];
-            const formData = new FormData();
-            formData.append("file", file, file.name);
-
-            fetch("/blog/upload", {
-              method: "POST",
-              body: formData,
-            })
-              .then((res) => res.json())
-              .then((data) => {
-                callback(data.location, { title: file.name });
-              })
-              .catch((err) => {
-                console.error("Upload Error:", err);
-                alert("File could not be uploaded.");
-              });
-          });
-
-          input.click();
-        },
       });
     </script>
   </body>
