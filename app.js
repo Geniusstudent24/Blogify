@@ -10,7 +10,8 @@ const Blog = require("./model/blog");
 const http = require("http");
 const { Server } = require("socket.io");
 const session = require("express-session");
-const flash = require("connect-flash");
+const cron = require("node-cron");
+const { deleteS3File } = require("./services/s3-service");
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -59,6 +60,29 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log(socket.id);
   });
+});
+
+cron.schedule("* * * * *", async () => {
+  console.log("Running scheduled job: Deleting posts older than 14 days...");
+  const fourteenDaysAgo = new Date(Date.now() - 2 * 60 * 1000);
+
+  try {
+    const oldPosts = await Blog.find({ createdAt: { $lte: fourteenDaysAgo } });
+
+    if (oldPosts.length > 0) {
+      for (const post of oldPosts) {
+        if (post.coverImage) {
+          await deleteS3File(post.coverImage);
+        }
+        await Blog.findByIdAndDelete(post._id);
+        console.log(`Post "${post.title}" deleted from MongoDB.`);
+      }
+    } else {
+      console.log("No old posts to delete.");
+    }
+  } catch (error) {
+    console.error("Error during the auto-delete cron job:", error);
+  }
 });
 
 server.listen(PORT, () => console.log("server is started...", PORT));
