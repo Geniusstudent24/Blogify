@@ -257,7 +257,7 @@
         }
       }
 
-      /* @media (max-width: 576px) {
+      @media (max-width: 576px) {
         .form-card {
           padding: 20px;
         }
@@ -275,30 +275,6 @@
         .btn-primary {
           padding: 10px 25px;
           font-size: 0.95rem;
-        }
-      } */
-
-      /* === ADD THIS ENTIRE BLOCK AT THE VERY END OF YOUR <style> TAG === */
-
-      @media (max-width: 576px) {
-        .custom-file-input-display {
-          flex-wrap: nowrap !important; /* Forces items onto one line */
-          overflow: hidden !important; /* Hides anything that tries to escape */
-        }
-
-        .custom-file-input-display .file-name {
-          /* These three properties cut off long text with "..." */
-          white-space: nowrap !important;
-          overflow: hidden !important;
-          text-overflow: ellipsis !important;
-
-          /* This is the critical fix for allowing flex items to shrink */
-          min-width: 0 !important;
-        }
-
-        .custom-file-input-display .browse-button {
-          /* This prevents the button itself from shrinking */
-          flex-shrink: 0 !important;
         }
       }
 
