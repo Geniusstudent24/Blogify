@@ -257,7 +257,7 @@
         }
       }
 
-      @media (max-width: 576px) {
+      /* @media (max-width: 576px) {
         .form-card {
           padding: 20px;
         }
@@ -275,6 +275,30 @@
         .btn-primary {
           padding: 10px 25px;
           font-size: 0.95rem;
+        }
+      } */
+
+      /* === ADD THIS ENTIRE BLOCK AT THE VERY END OF YOUR <style> TAG === */
+
+      @media (max-width: 576px) {
+        .custom-file-input-display {
+          flex-wrap: nowrap !important; /* Forces items onto one line */
+          overflow: hidden !important; /* Hides anything that tries to escape */
+        }
+
+        .custom-file-input-display .file-name {
+          /* These three properties cut off long text with "..." */
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+
+          /* This is the critical fix for allowing flex items to shrink */
+          min-width: 0 !important;
+        }
+
+        .custom-file-input-display .browse-button {
+          /* This prevents the button itself from shrinking */
+          flex-shrink: 0 !important;
         }
       }
 
@@ -409,8 +433,7 @@
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        // --- Initialize TinyMCE Editor ---
+      document.addEventListener("DOM  ContentLoaded", function () {
         tinymce.init({
           selector: "textarea#body",
           plugins: "image link lists media table code help wordcount",
@@ -444,7 +467,6 @@
           },
         });
 
-        // --- Initialize AOS Animations ---
         AOS.init({
           offset: 100,
           delay: 0,
@@ -455,7 +477,6 @@
           anchorPlacement: "top-bottom",
         });
 
-        // --- Handle the Page Loader ---
         const loader = document.getElementById("page-loader");
         if (loader) {
           loader.classList.add("hidden");
@@ -464,14 +485,13 @@
           }, 500);
         }
 
-        // --- Handle Form Submission ---
         const socket = io();
         const form = document.getElementById("addBlogForm");
         if (form) {
           form.addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            tinymce.triggerSave(); // This is the important fix
+            tinymce.triggerSave();
 
             const formData = new FormData(form);
             try {
@@ -496,7 +516,6 @@
           });
         }
 
-        // --- Handle Custom File Input Display ---
         const coverImageInput = document.getElementById("coverImage");
         const fileNameDisplay = document.getElementById("fileNameDisplay");
         if (coverImageInput && fileNameDisplay) {
