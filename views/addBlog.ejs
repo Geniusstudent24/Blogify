@@ -151,6 +151,7 @@
         transition: all 0.3s ease;
         box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
         flex-wrap: nowrap;
+        overflow: hidden;
       }
 
       .custom-file-input-display:hover {
@@ -162,6 +163,7 @@
       .custom-file-input-display .file-name {
         color: var(--text-muted);
         flex-grow: 1;
+        flex-shrink: 1;
         text-align: left;
         overflow: hidden;
         white-space: nowrap;
@@ -178,6 +180,7 @@
         font-size: 0.95rem;
         font-weight: 500;
         transition: background 0.3s ease;
+        flex-shrink: 0;
       }
 
       .custom-file-input-display:hover .browse-button {
