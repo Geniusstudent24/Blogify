@@ -87,4 +87,18 @@ cron.schedule("0 0 * * *", async () => {
   }
 });
 
+app.get("/test-key", (req, res) => {
+  const publicKey = process.env.VAPID_PUBLIC_KEY || "KEY NOT FOUND";
+
+  console.log("--- VAPID PUBLIC KEY TEST ---");
+  console.log("The key is:", publicKey);
+  console.log("The key length is:", publicKey.length);
+
+  res.send(`
+    <h1>The VAPID Public Key Your Server is Actually Using:</h1>
+    <p><strong>Key:</strong> ${publicKey}</p>
+    <p><strong>Length:</strong> ${publicKey.length}</p>
+  `);
+});
+
 server.listen(PORT, () => console.log("server is started...", PORT));
