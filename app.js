@@ -39,7 +39,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(chekForAuthenticationCookie("token"));
 app.use(express.static(path.resolve("./public")));
-app.use("/notifications", notificationRouter);
+//app.use("/notifications", notificationRouter);
 
 setIo(io);
 
