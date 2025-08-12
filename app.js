@@ -12,6 +12,7 @@ const { Server } = require("socket.io");
 const session = require("express-session");
 const cron = require("node-cron");
 const { deleteS3File } = require("./services/s3-service");
+const notificationRouter = require("./router/notification");
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -38,6 +39,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(chekForAuthenticationCookie("token"));
 app.use(express.static(path.resolve("./public")));
+app.use("/notifications", notificationRouter);
 
 setIo(io);
 

@@ -6,12 +6,20 @@ const { Upload } = require("@aws-sdk/lib-storage");
 const multerS3 = require("multer-s3");
 const blogs = require("../model/blog");
 const comment = require("../model/comments");
+const webPush = require("web-push");
+const Subscription = require("../model/subscription");
 
 let ioInstance;
 
 function setIo(io) {
   ioInstance = io;
 }
+
+webPush.setVapidDetails(
+  "mailto:kingjunagadh737@gmail.com",
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
 
 const s3BucketName = process.env.S3_BUCKET_NAME;
 
@@ -130,6 +138,23 @@ router.post(
         coverImage: req.file.location,
         category,
       });
+
+      const payload = JSON.stringify({
+        title: `New Blog Post: ${title}`,
+        body: `A new post has been added in the ${category} category. Click to view!`,
+      });
+
+      const subscriptions = await Subscription.find({});
+
+      for (const sub of subscriptions) {
+        try {
+          await webPush.sendNotification(sub, payload);
+        } catch (error) {
+          console.error("Error sending notification to a subscriber: ", error);
+        }
+      }
+
+      console.log(`Notification sent to ${subscriptions.length} subscribers.`);
 
       ioInstance.emit("new-blog", {
         title: Blog.title,
