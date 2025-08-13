@@ -12,7 +12,6 @@ const { Server } = require("socket.io");
 const session = require("express-session");
 const cron = require("node-cron");
 const { deleteS3File } = require("./services/s3-service");
-const notificationRouter = require("./router/notification");
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -39,7 +38,6 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(chekForAuthenticationCookie("token"));
 app.use(express.static(path.resolve("./public")));
-//app.use("/notifications", notificationRouter);
 
 setIo(io);
 
@@ -85,20 +83,6 @@ cron.schedule("0 0 * * *", async () => {
   } catch (error) {
     console.error("Error during the auto-delete cron job:", error);
   }
-});
-
-app.get("/test-key", (req, res) => {
-  const publicKey = process.env.VAPID_PUBLIC_KEY || "KEY NOT FOUND";
-
-  console.log("--- VAPID PUBLIC KEY TEST ---");
-  console.log("The key is:", publicKey);
-  console.log("The key length is:", publicKey.length);
-
-  res.send(`
-    <h1>The VAPID Public Key Your Server is Actually Using:</h1>
-    <p><strong>Key:</strong> ${publicKey}</p>
-    <p><strong>Length:</strong> ${publicKey.length}</p>
-  `);
 });
 
 server.listen(PORT, () => console.log("server is started...", PORT));
