@@ -15,11 +15,11 @@ function setIo(io) {
   ioInstance = io;
 }
 
-webPush.setVapidDetails(
-  "mailto:kingjunagadh737@gmail.com",
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
+// webPush.setVapidDetails(
+//   "mailto:kingjunagadh737@gmail.com",
+//   process.env.VAPID_PUBLIC_KEY,
+//   process.env.VAPID_PRIVATE_KEY
+// );
 
 const s3BucketName = process.env.S3_BUCKET_NAME;
 
@@ -139,22 +139,22 @@ router.post(
         category,
       });
 
-      const payload = JSON.stringify({
-        title: `New Blog Post: ${title}`,
-        body: `A new post has been added in the ${category} category. Click to view!`,
-      });
+      // const payload = JSON.stringify({
+      //   title: `New Blog Post: ${title}`,
+      //   body: `A new post has been added in the ${category} category. Click to view!`,
+      // });
 
-      const subscriptions = await Subscription.find({});
+      // const subscriptions = await Subscription.find({});
 
-      for (const sub of subscriptions) {
-        try {
-          await webPush.sendNotification(sub, payload);
-        } catch (error) {
-          console.error("Error sending notification to a subscriber: ", error);
-        }
-      }
+      // for (const sub of subscriptions) {
+      //   try {
+      //     await webPush.sendNotification(sub, payload);
+      //   } catch (error) {
+      //     console.error("Error sending notification to a subscriber: ", error);
+      //   }
+      // }
 
-      console.log(`Notification sent to ${subscriptions.length} subscribers.`);
+      // console.log(`Notification sent to ${subscriptions.length} subscribers.`);
 
       ioInstance.emit("new-blog", {
         title: Blog.title,
