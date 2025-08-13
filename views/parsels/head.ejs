@@ -12,3 +12,15 @@
 />
 <link rel="icon" type="image/x-icon" href="/images/prf.ico" />
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script
+  src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+  defer
+></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function (OneSignal) {
+    await OneSignal.init({
+      appId: "844186da-e26f-4253-bb31-dba2429feb69",
+    });
+  });
+</script>
