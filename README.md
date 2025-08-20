@@ -1,8 +1,8 @@
 # Blogify - A College Communication Portal
 
 ![Blogify Screenshot]
-
-
+TO click here see a scrennshot 
+https://github.com/Geniusstudent24/Blogify/blob/main/public/screenshot/Annotation%202025-08-20%20155949.png?raw=true
 
 A full-stack web application designed to streamline communication within a college or educational institution. This platform allows administrators (teachers) to post assignments, notices, and study materials in a centralized location. Students can view content, engage via comments, and subscribe to real-time push notifications for new updates.
 
