@@ -23,7 +23,6 @@ const uploads = multer({
     bucket: s3BucketName,
     acl: "public-read",
     contentType: multerS3.AUTO_CONTENT_TYPE,
-    contentDisposition: 'attachment',
     key: function (req, file, cb) {
       cb(null, Date.now().toString() + "-" + file.originalname);
     },
