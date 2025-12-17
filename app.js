@@ -63,7 +63,7 @@ io.on("connection", (socket) => {
   });
 });
 
-cron.schedule("* * * * *", async () => {
+cron.schedule("0 */2 * * *", async () => {
   console.log("Running keep-alive job: Sending request to self to prevent sleep...");
   try {
     await axios.get(process.env.DEPLOYED_URL);
