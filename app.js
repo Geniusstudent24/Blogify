@@ -96,7 +96,7 @@ cron.schedule("0 0 * * *", async () => {
   }
 });
 
-server.listen(PORT, () => console.log("server is started...", PORT));
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(chekForAuthenticationCookie("token"));
