@@ -9,6 +9,9 @@ const comment = require("../model/comments");
 const webPush = require("web-push");
 const Subscription = require("../model/subscription");
 
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { GetObjectCommand } = require("@aws-sdk/client-s3");
+
 let ioInstance;
 
 function setIo(io) {
