@@ -288,6 +288,19 @@
         }
       }
 
+      .btn-primary.btn-lg.shadow {
+          background: var(--button-gradient);
+          border: none;
+          border-radius: 30px;
+          padding: 12px 35px;
+          transition: all 0.3s ease;
+      }
+      .btn-primary.btn-lg.shadow:hover {
+          background: var(--button-hover-gradient);
+          transform: translateY(-3px);
+          box-shadow: var(--shadow-md);
+      }
+    
       @media (max-width: 576px) {
         .blog-title {
           font-size: 2rem;
@@ -379,13 +392,18 @@
             />
           </header>
 
-          <section
-            class="blog-content"
-            data-aos="fade-up"
-            data-aos-delay="200"
-            data-aos-duration="1000"
+         <section
+              class="blog-content"
+              data-aos="fade-up"
+              data-aos-delay="200"
+              data-aos-duration="1000"
           >
-            <div class="blog-post-content"><%- bgs.body %></div>
+              <div class="blog-post-content"><%- bgs.body %></div>
+              <div class="text-center mt-4 mb-2">
+                  <a href="/blog/<%= bgs._id %>?view=pdf" target="_blank" class="btn btn-primary btn-lg shadow">
+                    <i class="fa-solid fa-file-pdf me-2"></i> View PDF Content
+                  </a>
+              </div>
           </section>
 
           <aside
