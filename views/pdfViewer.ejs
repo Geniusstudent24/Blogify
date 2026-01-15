@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Secure Reader | Blogify</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <style>
+        body { background-color: #333; margin: 0; padding: 20px; font-family: sans-serif; }
+        #canvas-container { display: flex; flex-direction: column; align-items: center; }
+        canvas { box-shadow: 0 0 20px rgba(0,0,0,0.5); margin-bottom: 30px; max-width: 100%; }
+        .no-copy { user-select: none; -webkit-user-select: none; }
+    </style>
+</head>
+<body oncontextmenu="return false;" class="no-copy">
+    <div id="canvas-container"></div>
+
+    <script>
+        const url = "<%= securePdfUrl %>"; 
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        const container = document.getElementById('canvas-container');
+
+        pdfjsLib.getDocument(url).promise.then(pdf => {
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                pdf.getPage(pageNum).then(page => {
+                    const scale = 1.5;
+                    const viewport = page.getViewport({ scale });
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    container.appendChild(canvas);
+
+                    page.render({ canvasContext: context, viewport: viewport });
+                });
+            }
+        }).catch(err => {
+            document.body.innerHTML = "<h1 style='color:white; text-align:center;'>Link Expired. Please refresh the blog details page.</h1>";
+        });
+    </script>
+</body>
+</html>
