@@ -24,7 +24,7 @@ const uploads = multer({
   storage: multerS3({
     s3: s3,
     bucket: s3BucketName,
-    acl: "public-read",
+    acl: "private",
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: function (req, file, cb) {
       cb(null, Date.now().toString() + "-" + file.originalname);
@@ -51,11 +51,25 @@ router.get("/:id", async (req, res) => {
     const blog = await blogs
       .findById(req.params.id)
       .populate("createdBy", "firstName photo");
+    
+    if (req.query.view === "pdf") {
+      if (!blog) return res.status(404).send("Blog not found");
+      const key = blog.coverImage.split('/').pop();
+      const command = new GetObjectCommand({
+        Bucket: s3BucketName,
+        Key: key,
+      });
+      const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 60 });
+      return res.render("pdfViewer", {
+        user: req.user,
+        securePdfUrl,
+      });
+    }
     const comments = await comment
       .find({ blogId: req.params.id })
       .populate("createdBy", "firstName photo")
       .sort({ createdAt: -1 });
-
+    
     return res.render("blog", {
       user: req.user,
       bgs: blog,
@@ -63,9 +77,6 @@ router.get("/:id", async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching blog or comments:", error);
-    if (error.name === "CastError") {
-      return res.status(400).send("Invalid Blog ID.");
-    }
     res.status(500).send("Internal Server Error");
   }
 });
