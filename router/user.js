@@ -124,10 +124,13 @@ router.post("/toggle-maintenance", async (req, res) => {
         settings.isMaintenance = !settings.isMaintenance;
         await settings.save();
 
-        res.json({ success: true, isMaintenance: settings.isMaintenance });
+        res.json({ 
+            success: true, 
+            isMaintenance: settings.isMaintenance,
+            message: `Maintenance mode is now ${settings.isMaintenance ? 'enabled' : 'disabled'}`
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Server Error" });
+        res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 });
-
 module.exports = router;
