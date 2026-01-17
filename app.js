@@ -83,35 +83,26 @@ io.on("connection", (socket) => {
   });
 });
 
-// 14 days deletion logic
-// Ye code saare blogs aur unki S3 files ko turant delete kar dega
-cron.schedule("* * * * *", async () => { 
-  console.log("CRITICAL: Starting full database and S3 cleanup...");
+cron.schedule("0 0 * * *", async () => {
+  console.log("Running scheduled job: Deleting posts older than 14 days...");
+  const fourteenDaysAgo = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
 
   try {
-    // Bina kisi condition ke saare blogs dhoondo
-    const allPosts = await Blog.find({}); 
-
-    if (allPosts.length > 0) {
-      for (const post of allPosts) {
-        // 1. S3 se file delete karo
+    const oldPosts = await Blog.find({ createdAt: { $lte: fourteenDaysAgo } });
+    if (oldPosts.length > 0) {
+      for (const post of oldPosts) {
         if (post.coverImage) {
-          await deleteS3File(post.coverImage); 
+          await deleteS3File(post.coverImage);
         }
-        // 2. Database se record delete karo
-        await Blog.findByIdAndDelete(post._id); 
-        console.log(`DELETED: ${post.title}`);
+        await Blog.findByIdAndDelete(post._id);
+        console.log(`Post "${post.title}" deleted successfully.`);
       }
-      console.log("SUCCESS: All old blogs and S3 files cleared.");
     } else {
-      console.log("Everything is already clean.");
+      console.log("No old posts found to delete.");
     }
   } catch (error) {
-    console.error("Cleanup Error:", error);
+    console.error("Error during auto-delete cron job:", error);
   }
-}, {
-  scheduled: true,
-  runOnInit: true // Ye line server start hote hi code chala degi
 });
 
 server.listen(PORT, () => console.log("server is started at PORT:", PORT));
