@@ -54,17 +54,27 @@ router.get("/:id", async (req, res) => {
     
     if (req.query.view === "pdf") {
       if (!blog) return res.status(404).send("Blog not found");
-      const key = blog.coverImage.split('/').pop();
-      const command = new GetObjectCommand({
-        Bucket: s3BucketName,
-        Key: key,
-      });
-      const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 60 });
-      return res.render("pdfViewer", {
-        user: req.user,
-        securePdfUrl,
-      });
+
+      // Check: File PDF hai ya Image (.jpg/.png)
+      const isPDF = blog.coverImage.toLowerCase().endsWith(".pdf");
+
+      if (isPDF) {
+        const key = blog.coverImage.split('/').pop();
+        const command = new GetObjectCommand({
+          Bucket: s3BucketName,
+          Key: key,
+        });
+        const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+        return res.render("pdfViewer", {
+          user: req.user,
+          securePdfUrl,
+        });
+      } else {
+        // Agar image hai toh direct redirect karein taaki error na aaye
+        return res.redirect(blog.coverImage);
+      }
     }
+
     const comments = await comment
       .find({ blogId: req.params.id })
       .populate("createdBy", "firstName photo")
@@ -76,7 +86,7 @@ router.get("/:id", async (req, res) => {
       comments,
     });
   } catch (error) {
-    console.error("Error fetching blog or comments:", error);
+    console.error("Error:", error);
     res.status(500).send("Internal Server Error");
   }
 });
