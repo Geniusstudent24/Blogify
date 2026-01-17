@@ -54,23 +54,26 @@ router.get("/:id", async (req, res) => {
       .populate("createdBy", "firstName photo");
     
     if (req.query.view === "pdf") {
-      if (!blog || !blog.materialFile) return res.status(404).send("Content not found");
+    if (!blog || !blog.materialFile) return res.status(404).send("Content not found");
 
-      const isPDF = blog.materialFile.toLowerCase().endsWith(".pdf");
+    const isPDF = blog.materialFile.toLowerCase().endsWith(".pdf");
 
-      if (isPDF) {
-        const key = blog.materialFile.split('/').pop();
+    if (isPDF) {
+        // FIX: Extracting key from full URL correctly
+        const fileUrl = new URL(blog.materialFile);
+        const key = fileUrl.pathname.substring(1); // pathname includes leading slash, we remove it
+
         const command = new GetObjectCommand({
-          Bucket: s3BucketName,
-          Key: key,
+            Bucket: s3BucketName,
+            Key: key,
         });
+
         const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
         return res.render("pdfViewer", { user: req.user, securePdfUrl });
-      } else {
+    } else {
         return res.redirect(blog.materialFile);
-      }
     }
-
+}
     const comments = await comment
       .find({ blogId: req.params.id })
       .populate("createdBy", "firstName photo")
