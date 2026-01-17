@@ -42,7 +42,7 @@ setIo(io);
 
 // app.js mein routes se upar add karein
 app.use((req, res, next) => {
-  const isMaintenance = false; // Maintenance on karne ke liye true rakhein
+  const isMaintenance = true; // Maintenance on karne ke liye true rakhein
 
   if (isMaintenance) {
     // Agar user logged in nahi hai ya uska role ADMIN nahi hai
