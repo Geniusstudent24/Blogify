@@ -49,46 +49,36 @@ router.get("/add", isAuthenticated, (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const blog = await blogs
-      .findById(req.params.id)
-      .populate("createdBy", "firstName photo");
-    
+    const blog = await blogs.findById(req.params.id).populate("createdBy", "firstName photo");
+    if (!blog) return res.status(404).send("Blog not found");
+
     if (req.query.view === "pdf") {
-    if (!blog || !blog.materialFile) return res.status(404).send("Content not found");
+      if (!blog.materialFile) return res.status(404).send("Content file not found");
 
-    const isPDF = blog.materialFile.toLowerCase().endsWith(".pdf");
-
-    if (isPDF) {
-        // FIX: Extracting key from full URL correctly
+      const isPDF = blog.materialFile.toLowerCase().endsWith(".pdf");
+      if (isPDF) {
+        // Fix: S3 URL se correct key nikalne ke liye
         const fileUrl = new URL(blog.materialFile);
-        const key = fileUrl.pathname.substring(1); // pathname includes leading slash, we remove it
+        const key = fileUrl.pathname.substring(1); 
 
         const command = new GetObjectCommand({
-            Bucket: s3BucketName,
-            Key: key,
+          Bucket: s3BucketName,
+          Key: key,
         });
 
         const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
         return res.render("pdfViewer", { user: req.user, securePdfUrl });
-    } else {
+      } else {
         return res.redirect(blog.materialFile);
+      }
     }
-}
-    const comments = await comment
-      .find({ blogId: req.params.id })
-      .populate("createdBy", "firstName photo")
-      .sort({ createdAt: -1 });
-    
-    return res.render("blog", {
-      user: req.user,
-      bgs: blog,
-      comments,
-    });
+
+    const comments = await comment.find({ blogId: req.params.id }).populate("createdBy", "firstName photo").sort({ createdAt: -1 });
+    return res.render("blog", { user: req.user, bgs: blog, comments });
   } catch (error) {
     res.status(500).send("Internal Server Error");
   }
 });
-
 router.post("/comment/:blogId", async (req, res) => {
   try {
     if (!req.user) return res.status(401).end();
