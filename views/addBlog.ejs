@@ -327,69 +327,56 @@
     >
       <div class="form-card" data-aos="fade-up" data-aos-duration="1000">
         <h1>Create New Blog Post</h1>
-        <form
-          id="addBlogForm"
-          action="/blog"
-          method="post"
-          enctype="multipart/form-data"
-        >
-          <div class="mb-4" data-aos="fade-up" data-aos-delay="100">
-            <label for="coverImage" class="form-label">Cover Image</label>
-            <div class="custom-file-input-wrapper">
-              <input
-                type="file"
-                id="coverImage"
-                name="coverImage"
-                accept="image/*"
-              />
-              <div class="custom-file-input-display">
-                <span class="file-name" id="fileNameDisplay"
-                  >No file chosen</span
-                >
-                <span class="browse-button"
-                  ><i class="fas fa-upload me-2"></i>Browse</span
-                >
+        <form id="addBlogForm" action="/blog" method="post" enctype="multipart/form-data">
+              <div class="mb-4" data-aos="fade-up" data-aos-delay="100">
+                  <label for="coverImage" class="form-label">Cover Image (Card Thumbnail)</label>
+                  <div class="custom-file-input-wrapper">
+                      <input type="file" id="coverImage" name="coverImage" accept="image/*" required />
+                      <div class="custom-file-input-display">
+                          <span class="file-name" id="fileNameDisplay">No file chosen</span>
+                          <span class="browse-button"><i class="fas fa-image me-2"></i>Browse Image</span>
+                      </div>
+                  </div>
               </div>
-            </div>
-          </div>
-
-          <div class="mb-4" data-aos="fade-up" data-aos-delay="200">
-            <label for="title" class="form-label">Blog Title</label>
-            <input
-              type="text"
-              class="form-control"
-              id="title"
-              name="title"
-              placeholder="Enter blog title"
-            />
-          </div>
-
-          <div class="mb-4" data-aos="fade-up" data-aos-delay="300">
-            <label for="category" class="form-label">Select Category</label>
-            <select class="form-select" id="category" name="category" required>
-              <option value="General">General</option>
-              <option value="Assignment">Assignment</option>
-              <option value="Notice">Notice</option>
-              <option value="Study Material">Study Material</option>
-            </select>
-          </div>
-
-          <div class="mb-4" data-aos="fade-up" data-aos-delay="400">
-            <label for="body" class="form-label">Blog Content</label>
-            <textarea
-              class="form-control"
-              id="body"
-              name="body"
-              rows="10"
-              placeholder="Write your blog content here..."
-            ></textarea>
-          </div>
-
-          <div data-aos="fade-up" data-aos-delay="500">
-            <button type="submit" class="btn btn-primary w-100">
-              Publish Blog
-            </button>
-          </div>
+              <div class="mb-4" data-aos="fade-up" data-aos-delay="150">
+                  <label for="contentFile" class="form-label">Content File (PDF/Secure Image)</label>
+                  <div class="custom-file-input-wrapper">
+                      <input type="file" id="contentFile" name="contentFile" accept="application/pdf,image/*" />
+                      <div class="custom-file-input-display">
+                          <span class="file-name" id="contentFileNameDisplay">No file chosen (Optional)</span>
+                          <span class="browse-button" style="background: var(--accent-color);"><i class="fas fa-file-pdf me-2"></i>Browse File</span>
+                      </div>
+                  </div>
+                  <small class="text-muted d-block mt-1">Ye file "View Content" button pe secure viewer mein khulegi.</small>
+              </div>
+              <div class="mb-4 text-start" data-aos="fade-up" data-aos-delay="200">
+                  <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" id="isPrivate" name="isPrivate" value="true">
+                      <label class="form-check-label fw-bold" for="isPrivate">
+                        <i class="fas fa-lock me-1"></i> Special Blog (Login Required to View)
+                      </label>
+                  </div>
+              </div>    
+              <div class="mb-4" data-aos="fade-up" data-aos-delay="300">
+                  <label for="title" class="form-label">Blog Title</label>
+                  <input type="text" class="form-control" id="title" name="title" placeholder="Enter blog title" required />
+              </div>
+              <div class="mb-4" data-aos="fade-up" data-aos-delay="400">
+                    <label for="category" class="form-label">Select Category</label>
+                    <select class="form-select" id="category" name="category" required>
+                          <option value="General">General</option>
+                          <option value="Assignment">Assignment</option>
+                          <option value="Notice">Notice</option>
+                          <option value="Study Material">Study Material</option>
+                    </select>
+              </div>  
+              <div class="mb-4" data-aos="fade-up" data-aos-delay="500">
+                  <label for="body" class="form-label">Blog Description (Text Content)</label>
+                  <textarea class="form-control" id="body" name="body" rows="10" placeholder="Write your blog details here..."></textarea>
+              </div>
+              <div data-aos="fade-up" data-aos-delay="600">
+                  <button type="submit" class="btn btn-primary w-100">Publish Blog</button>
+              </div>
         </form>
       </div>
     </div>
@@ -506,6 +493,18 @@
           });
         }
       });
+        const setupFileDisplay = (inputId, displayId) => {
+        const input = document.getElementById(inputId);
+        const display = document.getElementById(displayId);
+        if (input && display) {
+            input.addEventListener("change", function() {
+            display.textContent = this.files.length > 0 ? this.files[0].name : "No file chosen";
+        });
+        }
+      };
+
+      setupFileDisplay("coverImage", "fileNameDisplay");  
+      setupFileDisplay("contentFile", "contentFileNameDisplay");
     </script>
   </body>
 </html>
