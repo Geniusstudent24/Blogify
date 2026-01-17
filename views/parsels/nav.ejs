@@ -50,9 +50,47 @@
           >
         </li>
         <% if (locals.user) { %> <% if (locals.user.role === 'ADMIN') { %>
-        <li class="nav-item">
-          <a class="nav-link" href="/blog/add">Add Blog</a>
-        </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/blog/add">Add Blog</a>
+          </li>
+          <li class="nav-item ms-lg-2">
+            <button id="maintenanceBtn" class="btn btn-outline-danger btn-sm rounded-pill mt-1 py-1 px-3">
+              <i class="fas fa-power-off me-1"></i> Toggle Maintenance
+            </button>
+          </li>
+        <% } %>
+
+      <% if (locals.user && locals.user.role === 'ADMIN') { %>
+        <script>
+            document.getElementById('maintenanceBtn').addEventListener('click', async () => {
+            const result = await Swal.fire({
+            title: 'Change Site Status?',
+            text: "This will enable or disable access for all non-admin users.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#6a00ff',
+            confirmButtonText: 'Yes, Toggle it!'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch('/user/toggle-maintenance', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Status Updated!',
+                        text: `Maintenance mode is now ${data.isMaintenance ? 'ENABLED' : 'DISABLED'}`,
+                        icon: 'success',
+                        timer: 2000
+                    }).then(() => location.reload());
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Failed to update site status.', 'error');
+            }
+        }
+      });
+  </script>
+    <% } %>
         <% } %>
         <li class="nav-item dropdown">
           <a
