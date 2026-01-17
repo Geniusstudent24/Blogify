@@ -3,6 +3,7 @@ const USER = require("../model/user");
 const router = Router();
 const Blog = require("../model/blog");
 const fetch = require("node-fetch");
+const Settings = require("../model/settings");
 
 router.get("/signin", (req, res) => {
   return res.render("signin");
@@ -107,6 +108,26 @@ router.get("/home", async (req, res) => {
     console.error("Error fetching blogs:", error);
     res.status(500).send("Error occurred while fetching blogs.");
   }
+});
+
+router.post("/toggle-maintenance", async (req, res) => {
+    try {
+        if (!req.user || req.user.role !== "ADMIN") {
+            return res.status(403).json({ success: false, message: "Admin access required" });
+        }
+
+        let settings = await Settings.findOne();
+        if (!settings) {
+            settings = await Settings.create({ isMaintenance: false });
+        }
+
+        settings.isMaintenance = !settings.isMaintenance;
+        await settings.save();
+
+        res.json({ success: true, isMaintenance: settings.isMaintenance });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
 });
 
 module.exports = router;
