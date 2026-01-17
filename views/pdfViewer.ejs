@@ -14,14 +14,21 @@
     <div id="canvas-container"></div>
 
     <script>
-    [span_3](start_span)const url = "<%= securePdfUrl %>";[span_3](end_span)
-    [span_4](start_span)const pdfjsLib = window['pdfjs-dist/build/pdf'];[span_4](end_span)
-    [span_5](start_span)pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';[span_5](end_span)
+    // Testing ke liye pehle ye line add karein dekhne ke liye ki JS chal rahi hai
+    document.body.innerHTML += '<h2 style="color:yellow; text-align:center;">Attempting to load PDF...</h2>';
 
-    const container = document.getElementById('canvas-container');
+    const url = "<%= securePdfUrl %>";
+    console.log("Loading URL:", url);
+
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    // Version check - Ensure this match with your script tag src
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
     pdfjsLib.getDocument(url).promise.then(pdf => {
-        [span_6](start_span)// ... (aapka purana rendering loop)[span_6](end_span)
+        const container = document.getElementById('canvas-container');
+        // Clear the loading message
+        document.body.querySelector('h2').style.display = 'none';
+
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
             pdf.getPage(pageNum).then(page => {
                 const scale = 1.5;
@@ -35,18 +42,18 @@
             });
         }
     }).catch(err => {
-        // Mobile screen par asli error dikhane ke liye
+        // Red Box for error display on Mobile
         document.body.innerHTML = `
-            <div style="color:white; background:red; padding:20px; margin:20px; border-radius:10px;">
-                <h3>⚠️ PDF Loading Error:</h3>
+            <div style="color:white; background:red; padding:20px; margin:20px; border-radius:10px; font-family:sans-serif;">
+                <h3>⚠️ PDF Engine Error:</h3>
                 <p><b>Message:</b> ${err.message}</p>
-                <p><b>Name:</b> ${err.name}</p>
                 <hr>
-                <p style="font-size:12px;">Link: ${url.substring(0, 50)}...</p>
+                <p style="word-break: break-all; font-size:10px;">URL: ${url}</p>
             </div>
-        [span_7](start_span)`;[span_7](end_span)
+        `;
     });
 </script>
+
 
 </body>
 </html>
