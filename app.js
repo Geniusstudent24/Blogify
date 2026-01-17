@@ -13,6 +13,7 @@ const { chekForAuthenticationCookie } = require("./middleware/auoth");
 const { deleteS3File } = require("./services/s3-service");
 const { router: blogRouterInstance, setIo } = require("./router/blog");
 const userRouter = require("./router/user");
+const maintenanceMiddleware = require("./middleware/maintenance");
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -36,6 +37,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(chekForAuthenticationCookie("token"));
+app.use(maintenanceMiddleware);
 app.use(express.static(path.resolve("./public")));
 
 setIo(io);
