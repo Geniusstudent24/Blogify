@@ -19,6 +19,14 @@ const blogSchem = new Schema(
       type: String,
       required: false,
     },
+    materialFile: {
+      type: String,
+      required: false,
+    },
+    isPrivate: {
+      type: Boolean,
+      default: false,
+    },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "user",
@@ -28,5 +36,4 @@ const blogSchem = new Schema(
 );
 
 const blog = model("blog", blogSchem);
-
 module.exports = blog;
