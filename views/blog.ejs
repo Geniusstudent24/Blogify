@@ -392,18 +392,25 @@
             />
           </header>
 
-         <section
-              class="blog-content"
-              data-aos="fade-up"
-              data-aos-delay="200"
-              data-aos-duration="1000"
-          >
-              <div class="blog-post-content"><%- bgs.body %></div>
-              <div class="text-center mt-4 mb-2">
-                  <a href="/blog/<%= bgs._id %>?view=pdf" target="_blank" class="btn btn-primary btn-lg shadow">
-                    <i class="fa-solid fa-file-pdf me-2"></i> View PDF Content
-                  </a>
-              </div>
+          <section class="blog-content" data-aos="fade-up">
+            <% if (bgs.isPrivate && !locals.user) { %>
+                <div class="text-center py-5 border rounded" style="background: #f8f9fa;">
+                    <i class="fas fa-lock fa-4x mb-3 text-muted"></i>
+                    <h3 class="fw-bold">Exclusive Content</h3>
+                    <p class="text-muted">This blog is restricted to registered members only. Please log in to read.</p>
+                    <a href="/user/signin" class="btn btn-primary rounded-pill px-4">Login to View</a>
+                </div>
+            <% } else { %>
+                <div class="blog-post-content"><%- bgs.body %></div>
+                
+                <% if (bgs.materialFile) { %>
+                    <div class="text-center mt-4 mb-2">
+                        <a href="/blog/<%= bgs._id %>?view=pdf" target="_blank" class="btn btn-primary btn-lg shadow">
+                            <i class="fa-solid fa-file-pdf me-2"></i> View Content File
+                        </a>
+                    </div>
+                <% } %>
+            <% } %>
           </section>
 
           <aside
@@ -527,19 +534,17 @@
         mirror: false,
         anchorPlacement: "top-bottom",
       });
-      // console.log(blog.title); // Removed this line as 'blog' is not defined in this scope
-      console.log("<%= bgs.title %>"); // Corrected to use bgs.title from EJS context
+      console.log("<%= bgs.title %>");
 
       const currentBlogId = "<%= bgs._id %>";
-      // Corrected selector: changed from '#comments-list' to '.comment-list'
       const commentsList = document.querySelector(".comment-list");
       const commentForm = document.querySelector(".comment-form");
       const commentContentInput = document.getElementById("commentContent");
-      const commentCountElement = document.getElementById("comments-count"); // Ensure this element exists if you want to update it
+      const commentCountElement = document.getElementById("comments-count");
       const loginToCommentMessage = document.getElementById(
         "login-to-comment-message"
-      ); // Ensure this element exists if you want to hide it
-      const noCommentMessage = document.getElementById("no-comments-message"); // Ensure this element exists if you want to hide it
+      );
+      const noCommentMessage = document.getElementById("no-comments-message");
 
       const socket = io();
       socket.on("connect", () => {
@@ -580,8 +585,6 @@
 
           if (commentsList) {
             commentsList.prepend(commentDiv);
-          } else {
-            console.error("Error: commentsList element not found in DOM.");
           }
 
           if (noCommentMessage) {
@@ -593,7 +596,6 @@
           }
 
           if (commentCountElement) {
-            // Updated to safely get the current count and update the text content
             const commentsSectionH2 = document.querySelector(
               ".comments-section h2"
             );
@@ -606,8 +608,6 @@
               commentsSectionH2.textContent = `Comments (${currentCount + 1})`;
             }
             AOS.refreshHard();
-          } else {
-            console.error("Error: commentCountElement not found in DOM.");
           }
         }
       });
@@ -619,8 +619,6 @@
       if (commentForm) {
         commentForm.addEventListener("submit", async function (event) {
           event.preventDefault();
-          console.log("Form submitted!");
-
           const content = commentContentInput.value;
           if (!content.trim()) {
             alert("Please enter a comment.");
@@ -640,14 +638,7 @@
             if (response.ok) {
               commentContentInput.value = "";
             } else {
-              try {
-                const errorData = await response.json();
-                alert(
-                  `Error: ${errorData.message || "Failed to submit comment."}`
-                );
-              } catch {
-                alert("Failed to submit comment.");
-              }
+              alert("Failed to submit comment.");
             }
           } catch (error) {
             console.error("Comment submission failed:", error);
