@@ -521,7 +521,14 @@
               alt="<%= bgl.title %> Cover"
             />
             <div class="card-body">
-              <h5 class="card-title"><%= bgl.title %></h5>
+              <h5 class="card-title">
+                <%= bgl.title %>
+                <% if (bgl.isPrivate) { %>
+                    <span class="badge rounded-pill bg-warning text-dark" style="font-size: 0.65rem; margin-left: 5px;">
+                      <i class="fas fa-lock me-1"></i> Special
+                    </span>
+                <% } %>
+              </h5>
               <a href="/blog/<%= bgl._id %>" class="btn btn-primary mt-auto"
                 >View Details</a
               >
