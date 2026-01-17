@@ -5,7 +5,6 @@ const { s3 } = require("../services/s3-service");
 const multerS3 = require("multer-s3");
 const blogs = require("../model/blog");
 const comment = require("../model/comments");
-
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
 
@@ -15,6 +14,7 @@ function setIo(io) {
 }
 
 const s3BucketName = process.env.S3_BUCKET_NAME;
+
 const uploads = multer({
   storage: multerS3({
     s3: s3,
