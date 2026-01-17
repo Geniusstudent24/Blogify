@@ -42,27 +42,6 @@ app.use(express.static(path.resolve("./public")));
 
 setIo(io);
 
-// app.js mein routes se upar add karein
-app.use((req, res, next) => {
-  const isMaintenance = true; // Maintenance on karne ke liye true rakhein
-
-  if (isMaintenance) {
-    // Agar user logged in nahi hai ya uska role ADMIN nahi hai
-    if (!req.user || req.user.role !== "ADMIN") {
-      // Home page ke alawa baki sab routes block kar dega
-      if (req.path !== "/user/signin" && req.path !== "/user/signup") {
-         return res.send(`
-          <div style="text-align:center; padding:50px; font-family:sans-serif;">
-            <h1 style="color:#6a00ff;">🚧 Website Under Maintenance 🚧</h1>
-            <p>Please try again later</p>
-          </div>
-        `);
-      }
-    }
-  }
-  next();
-});
-    
 
 app.use("/user", userRouter);
 app.use("/blog", blogRouterInstance);
