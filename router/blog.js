@@ -2,24 +2,19 @@ const { Router } = require("express");
 const router = Router();
 const multer = require("multer");
 const { s3 } = require("../services/s3-service");
-const { Upload } = require("@aws-sdk/lib-storage");
 const multerS3 = require("multer-s3");
 const blogs = require("../model/blog");
 const comment = require("../model/comments");
-const webPush = require("web-push");
-const Subscription = require("../model/subscription");
 
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
 
 let ioInstance;
-
 function setIo(io) {
   ioInstance = io;
 }
 
 const s3BucketName = process.env.S3_BUCKET_NAME;
-
 const uploads = multer({
   storage: multerS3({
     s3: s3,
@@ -32,11 +27,17 @@ const uploads = multer({
   }),
 });
 
+const uploadFields = uploads.fields([
+  { name: "coverImage", maxCount: 1 },
+  { name: "contentFile", maxCount: 1 },
+]);
+
 function isAuthenticated(req, res, next) {
   if (!req.user) return res.status(401).json({ message: "Unauthorized" });
   if (req.user.role === "ADMIN") {
-    next();
+    return next();
   }
+  return res.status(403).json({ message: "Forbidden: Admin access only" });
 }
 
 router.get("/add", isAuthenticated, (req, res) => {
@@ -53,25 +54,20 @@ router.get("/:id", async (req, res) => {
       .populate("createdBy", "firstName photo");
     
     if (req.query.view === "pdf") {
-      if (!blog) return res.status(404).send("Blog not found");
+      if (!blog || !blog.materialFile) return res.status(404).send("Content not found");
 
-      // Check: File PDF hai ya Image (.jpg/.png)
-      const isPDF = blog.coverImage.toLowerCase().endsWith(".pdf");
+      const isPDF = blog.materialFile.toLowerCase().endsWith(".pdf");
 
       if (isPDF) {
-        const key = blog.coverImage.split('/').pop();
+        const key = blog.materialFile.split('/').pop();
         const command = new GetObjectCommand({
           Bucket: s3BucketName,
           Key: key,
         });
         const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
-        return res.render("pdfViewer", {
-          user: req.user,
-          securePdfUrl,
-        });
+        return res.render("pdfViewer", { user: req.user, securePdfUrl });
       } else {
-        // Agar image hai toh direct redirect karein taaki error na aaye
-        return res.redirect(blog.coverImage);
+        return res.redirect(blog.materialFile);
       }
     }
 
@@ -86,24 +82,19 @@ router.get("/:id", async (req, res) => {
       comments,
     });
   } catch (error) {
-    console.error("Error:", error);
     res.status(500).send("Internal Server Error");
   }
 });
 
-router.post("/comment/:blogId", isAuthenticated, async (req, res) => {
+router.post("/comment/:blogId", async (req, res) => {
   try {
+    if (!req.user) return res.status(401).end();
     const newComment = await comment.create({
       content: req.body.content,
       blogId: req.params.blogId,
       createdBy: req.user._id,
     });
-
-    const populatedComment = await newComment.populate(
-      "createdBy",
-      "firstName photo"
-    );
-
+    const populatedComment = await newComment.populate("createdBy", "firstName photo");
     ioInstance.emit("new-comment", {
       blogId: req.params.blogId,
       comment: {
@@ -116,10 +107,8 @@ router.post("/comment/:blogId", isAuthenticated, async (req, res) => {
         createdAt: populatedComment.createdAt,
       },
     });
-
     res.status(201).end();
   } catch (error) {
-    console.error("Error adding comment:", error);
     res.status(500).json({ message: "Failed to add comment." });
   }
 });
@@ -131,51 +120,44 @@ router.get("/category/:categoryName", async (req, res) => {
       .find({ category: categoryName })
       .populate("createdBy", "firstName photo")
       .sort({ createdAt: -1 });
-
     res.render("home", {
       user: req.user,
       bgls: blogsByCategory,
       pageCategory: categoryName,
     });
   } catch (error) {
-    console.error("Error fetching blogs by category:", error);
     res.redirect("/");
   }
 });
 
-router.post(
-  "/",
-  isAuthenticated,
-  uploads.single("coverImage"),
-  async (req, res) => {
-    try {
-      const { title, body, category } = req.body;
-      const Blog = await blogs.create({
-        body,
-        title,
-        createdBy: req.user._id,
-        coverImage: req.file.location,
-        category,
-      });
+router.post("/", isAuthenticated, uploadFields, async (req, res) => {
+  try {
+    const { title, body, category, isPrivate } = req.body;
+    const coverImageUrl = req.files["coverImage"] ? req.files["coverImage"][0].location : null;
+    const contentFileUrl = req.files["contentFile"] ? req.files["contentFile"][0].location : null;
 
-      ioInstance.emit("new-blog", {
-        title: Blog.title,
-        blogId: Blog._id,
-      });
-      res.json({ success: true, redirect: "/" });
-    } catch (error) {
-      console.error("Error adding blog:", error);
-      res
-        .status(500)
-        .json({ success: false, message: "Error occurred while adding blog." });
-    }
+    const Blog = await blogs.create({
+      title,
+      body,
+      category,
+      coverImage: coverImageUrl,
+      materialFile: contentFileUrl,
+      isPrivate: isPrivate === "true",
+      createdBy: req.user._id,
+    });
+
+    ioInstance.emit("new-blog", {
+      title: Blog.title,
+      blogId: Blog._id,
+    });
+    res.json({ success: true, blog: Blog });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error" });
   }
-);
+});
 
 router.post("/upload", uploads.single("file"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "No file was uploaded." });
-  }
+  if (!req.file) return res.status(400).json({ error: "No file" });
   res.json({ location: req.file.location });
 });
 
