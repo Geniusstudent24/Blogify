@@ -13,7 +13,7 @@ const { GetObjectCommand } = require("@aws-sdk/client-s3");
 
 const Blog = require("./model/blog");
 const { chekForAuthenticationCookie } = require("./middleware/auoth");
-const { deleteS3File } = require("./services/s3-service");
+const { deleteS3File, s3 } = require("./services/s3-service");
 const { router: blogRouterInstance, setIo } = require("./router/blog");
 const userRouter = require("./router/user");
 const maintenanceMiddleware = require("./middleware/maintenance");
