@@ -51,15 +51,13 @@ router.get("/:id", async (req, res) => {
   try {
     const blog = await blogs.findById(req.params.id).populate("createdBy", "firstName photo");
     if (!blog) return res.status(404).send("Blog not found");
-
-    // --- NEW: Cover Image ke liye Secure URL Generate Karna ---
-    let secureCoverUrl = blog.coverImage; // Default purana link
+    
+    let secureCoverUrl = blog.coverImage;
     if (blog.coverImage) {
         try {
             const coverUrlObj = new URL(blog.coverImage);
             let coverKey = decodeURIComponent(coverUrlObj.pathname.substring(1));
-            
-            // Bucket name fix (agar key mein bucket name aa jaye)
+          
             if (coverKey.startsWith(s3BucketName + "/")) {
                 coverKey = coverKey.replace(s3BucketName + "/", "");
             }
@@ -68,14 +66,13 @@ router.get("/:id", async (req, res) => {
                 Bucket: s3BucketName,
                 Key: coverKey,
             });
-            // Image ka signed link banaya
+            
             secureCoverUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
         } catch (err) {
             console.log("Cover Image Error:", err);
         }
     }
-    // ---------------------------------------------------------
-
+ 
     if (req.query.view === "pdf") {
       if (!blog.materialFile) return res.status(404).send("Content file not found");
 
@@ -93,7 +90,7 @@ router.get("/:id", async (req, res) => {
           Key: key,
         });
 
-        const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+        const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 180 });
         return res.render("pdfViewer", { user: req.user, securePdfUrl });
       } else {
         return res.redirect(blog.materialFile);
@@ -105,7 +102,7 @@ router.get("/:id", async (req, res) => {
       .populate("createdBy", "firstName photo")
       .sort({ createdAt: -1 });
 
-    // Yahan hum 'secureCoverUrl' pass kar rahe hain view mein
+ 
     return res.render("blog", { user: req.user, bgs: blog, comments, secureCoverUrl });
     
   } catch (error) {
