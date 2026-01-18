@@ -49,15 +49,35 @@ router.get("/add", isAuthenticated, (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const blog = await blogs
-      .findById(req.params.id)
-      .populate("createdBy", "firstName photo");
-
+    const blog = await blogs.findById(req.params.id).populate("createdBy", "firstName photo");
     if (!blog) return res.status(404).send("Blog not found");
 
+    // --- NEW: Cover Image ke liye Secure URL Generate Karna ---
+    let secureCoverUrl = blog.coverImage; // Default purana link
+    if (blog.coverImage) {
+        try {
+            const coverUrlObj = new URL(blog.coverImage);
+            let coverKey = decodeURIComponent(coverUrlObj.pathname.substring(1));
+            
+            // Bucket name fix (agar key mein bucket name aa jaye)
+            if (coverKey.startsWith(s3BucketName + "/")) {
+                coverKey = coverKey.replace(s3BucketName + "/", "");
+            }
+
+            const command = new GetObjectCommand({
+                Bucket: s3BucketName,
+                Key: coverKey,
+            });
+            // Image ka signed link banaya
+            secureCoverUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+        } catch (err) {
+            console.log("Cover Image Error:", err);
+        }
+    }
+    // ---------------------------------------------------------
+
     if (req.query.view === "pdf") {
-      if (!blog.materialFile)
-        return res.status(404).send("Content file not found");
+      if (!blog.materialFile) return res.status(404).send("Content file not found");
 
       const isPDF = blog.materialFile.toLowerCase().endsWith(".pdf");
       if (isPDF) {
@@ -73,10 +93,7 @@ router.get("/:id", async (req, res) => {
           Key: key,
         });
 
-        const securePdfUrl = await getSignedUrl(s3, command, {
-          expiresIn: 3600,
-        });
-
+        const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
         return res.render("pdfViewer", { user: req.user, securePdfUrl });
       } else {
         return res.redirect(blog.materialFile);
@@ -88,13 +105,14 @@ router.get("/:id", async (req, res) => {
       .populate("createdBy", "firstName photo")
       .sort({ createdAt: -1 });
 
-    return res.render("blog", { user: req.user, bgs: blog, comments });
+    // Yahan hum 'secureCoverUrl' pass kar rahe hain view mein
+    return res.render("blog", { user: req.user, bgs: blog, comments, secureCoverUrl });
+    
   } catch (error) {
     console.error(error);
     res.status(500).send("Internal Server Error");
   }
 });
-
 router.post("/", isAuthenticated, uploadFields, async (req, res) => {
   try {
     const { title, body, category, isPrivate } = req.body;
