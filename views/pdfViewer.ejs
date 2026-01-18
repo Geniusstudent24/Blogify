@@ -10,73 +10,61 @@
         #canvas-container { padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; }
         canvas { box-shadow: 0 4px 20px rgba(0,0,0,0.5); margin-bottom: 20px; max-width: 95%; height: auto !important; border-radius: 4px; }
         #loading-message { color: white; text-align: center; margin-top: 50px; font-size: 18px; }
-        .error-box { background: #ff4d4d; color: white; padding: 20px; border-radius: 8px; max-width: 500px; text-align: center; margin-top: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .error-box { background: #ff4d4d; color: white; padding: 20px; border-radius: 8px; max-width: 90%; text-align: center; margin-top: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .no-copy { user-select: none; -webkit-user-select: none; }
     </style>
 </head>
 <body oncontextmenu="return false;" class="no-copy">
 
     <div id="loading-message">
-        <i class="fas fa-spinner fa-spin"></i> Loading Document...
+        <i class="fas fa-spinner fa-spin"></i> Loading Secure Document...
     </div>
 
     <div id="canvas-container"></div>
 
     <script>
-        // NOTE: Yahan <%- %> use kiya hai taaki URL break na ho
+        // URL with unescaped ejs tag
         const url = "<%- securePdfUrl %>"; 
-        console.log("Initializing PDF Viewer with URL:", url);
+        console.log("Attempting to load:", url);
 
-        // Global Library Access
         const pdfjsLib = window.pdfjsLib;
-
-        // Worker Set karna (Zaroori hai)
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-        // Loading Task Start
         const loadingTask = pdfjsLib.getDocument(url);
 
         loadingTask.promise.then(function(pdf) {
-            console.log('PDF Loaded:', pdf.numPages, 'pages');
-            
-            // Hide Loader
-            const loader = document.getElementById('loading-message');
-            if (loader) loader.style.display = 'none';
-
+            document.getElementById('loading-message').style.display = 'none';
             const container = document.getElementById('canvas-container');
 
-            // Har page ko render karna
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                 pdf.getPage(pageNum).then(function(page) {
-                    const scale = 1.5; // Zoom Level
+                    const scale = 1.5;
                     const viewport = page.getViewport({ scale: scale });
-
                     const canvas = document.createElement('canvas');
                     const context = canvas.getContext('2d');
                     canvas.height = viewport.height;
                     canvas.width = viewport.width;
-                    
                     container.appendChild(canvas);
-
-                    const renderContext = {
-                        canvasContext: context,
-                        viewport: viewport
-                    };
-                    page.render(renderContext);
+                    page.render({ canvasContext: context, viewport: viewport });
                 });
             }
         }).catch(function(error) {
-            console.error('Error loading PDF:', error);
+            console.error('PDF Error:', error);
             document.getElementById('loading-message').style.display = 'none';
             
-            // Show Friendly Error Message
+            // Detailed Error Display
             const container = document.body;
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-box';
+            
+            let userMsg = "Unable to load document.";
+            if (error.name === "MissingPDFException") userMsg = "File not found (404). Check S3 Key.";
+            if (error.status === 403) userMsg = "Access Denied (403). Check S3 Permissions/Region.";
+
             errorDiv.innerHTML = `
-                <h3>⚠️ Unable to Load Document</h3>
-                <p>Technical Issue: ${error.message}</p>
-                <p style="font-size: 10px; margin-top:10px; word-break:break-all;">${url}</p>
+                <h3>⚠️ Error</h3>
+                <p>${userMsg}</p>
+                <p style="font-size: 12px; opacity: 0.8; margin-top: 10px;">${error.message}</p>
                 <button onclick="location.reload()" style="background: white; color: #ff4d4d; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; margin-top: 10px; font-weight: bold;">Retry</button>
             `;
             container.appendChild(errorDiv);
