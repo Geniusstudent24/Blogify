@@ -23,17 +23,17 @@
     <div id="canvas-container"></div>
 
     <script>
-        // 1. URL Securely Fetch karna (<%- %> use karein taaki URL break na ho)
-        const url = "<%- securePdfUrl %>";
+        // NOTE: Yahan <%- %> use kiya hai taaki URL break na ho
+        const url = "<%- securePdfUrl %>"; 
         console.log("Initializing PDF Viewer with URL:", url);
 
-        // 2. Global Library Access (v3 style)
+        // Global Library Access
         const pdfjsLib = window.pdfjsLib;
 
-        // 3. Worker Set karna (Most Important Step)
+        // Worker Set karna (Zaroori hai)
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-        // 4. Loading Task Start
+        // Loading Task Start
         const loadingTask = pdfjsLib.getDocument(url);
 
         loadingTask.promise.then(function(pdf) {
@@ -45,7 +45,7 @@
 
             const container = document.getElementById('canvas-container');
 
-            // 5. Har page ko render karna
+            // Har page ko render karna
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                 pdf.getPage(pageNum).then(function(page) {
                     const scale = 1.5; // Zoom Level
@@ -66,10 +66,7 @@
                 });
             }
         }).catch(function(error) {
-            // Error Handling
             console.error('Error loading PDF:', error);
-            
-            // Hide Loader
             document.getElementById('loading-message').style.display = 'none';
             
             // Show Friendly Error Message
@@ -78,8 +75,8 @@
             errorDiv.className = 'error-box';
             errorDiv.innerHTML = `
                 <h3>⚠️ Unable to Load Document</h3>
-                <p>We encountered an issue displaying this file.</p>
-                <p style="font-size: 12px; opacity: 0.8; margin-top: 10px;">Technical Details: ${error.message}</p>
+                <p>Technical Issue: ${error.message}</p>
+                <p style="font-size: 10px; margin-top:10px; word-break:break-all;">${url}</p>
                 <button onclick="location.reload()" style="background: white; color: #ff4d4d; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; margin-top: 10px; font-weight: bold;">Retry</button>
             `;
             container.appendChild(errorDiv);
