@@ -60,16 +60,16 @@ router.get("/:id", async (req, res) => {
         try {
             const fileUrl = new URL(blog.materialFile);
             
-            // KEY FIX: Agar pathname mein bucket name hai, toh usse hata do
-            let key = decodeURIComponent(fileUrl.pathname.substring(1)); // Remove leading '/'
+            // Step 1: URL se path nikalo
+            let key = decodeURIComponent(fileUrl.pathname.substring(1));
             
-            // Agar URL "s3.amazonaws.com/bucket-name/file.pdf" jaisa ha
-            // toh key abhi "bucket-name/file.pdf" hogi. Humein "bucket-name/" hatana hai.
+            // Step 2: CHECK - Agar key mein bucket name shuru mein hai, toh use hata do
+            // Example: "my-bucket/files/doc.pdf" -> "files/doc.pdf"
             if (key.startsWith(s3BucketName + "/")) {
                 key = key.replace(s3BucketName + "/", "");
             }
 
-            console.log("FINAL S3 KEY:", key); // Debugging ke liye
+            console.log("FINAL S3 KEY:", key); // Console mein check karein ye sahi file name hona chahiye
 
             const command = new GetObjectCommand({
               Bucket: s3BucketName,
