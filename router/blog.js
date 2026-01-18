@@ -55,9 +55,7 @@ router.get("/:id", async (req, res) => {
     if (req.query.view === "pdf") {
       if (!blog.materialFile) return res.status(404).send("Content file not found");
 
-      const isPDF = blog.materialFile.toLowerCase().endsWith(".pdf");
       if (isPDF) {
-        // Fix: S3 URL se correct key nikalne ke liye
         const fileUrl = new URL(blog.materialFile);
         const key = fileUrl.pathname.substring(1); 
 
