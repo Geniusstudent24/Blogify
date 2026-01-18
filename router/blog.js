@@ -55,29 +55,42 @@ router.get("/:id", async (req, res) => {
     if (req.query.view === "pdf") {
       if (!blog.materialFile) return res.status(404).send("Content file not found");
 
-      if (isPDF) {
-        const fileUrl = new URL(blog.materialFile);
-        const key = fileUrl.pathname.substring(1); 
-        console.log("S3 KEY BEING REQUESTED:", key);
+      // FIX 1: isPDF variable ko define karein
+      const isPDF = blog.materialFile.toLowerCase().endsWith('.pdf'); 
 
-        const command = new GetObjectCommand({
-          Bucket: s3BucketName,
-          Key: key,
-        });
-        console.log("Extracted S3 Key:", key);
-        const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
-        return res.render("pdfViewer", { user: req.user, securePdfUrl });
+      if (isPDF) {
+        try {
+            const fileUrl = new URL(blog.materialFile);
+            const key = fileUrl.pathname.substring(1); 
+            console.log("S3 KEY REQUESTED:", key);
+    
+            const command = new GetObjectCommand({
+              Bucket: s3BucketName,
+              Key: key,
+            });
+            
+            const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+            return res.render("pdfViewer", { user: req.user, securePdfUrl });
+        } catch (s3Error) {
+            console.error("S3/URL Error:", s3Error);
+            return res.status(500).send("Error generating secure link: " + s3Error.message);
+        }
       } else {
+        // Agar PDF nahi hai to direct redirect kar do
         return res.redirect(blog.materialFile);
       }
     }
 
     const comments = await comment.find({ blogId: req.params.id }).populate("createdBy", "firstName photo").sort({ createdAt: -1 });
     return res.render("blog", { user: req.user, bgs: blog, comments });
+    
   } catch (error) {
+    // FIX 2: Console mein pura error print karein taaki pata chale hua kya
+    console.error("MAIN SERVER ERROR:", error);
     res.status(500).send("Internal Server Error");
   }
 });
+
 router.post("/comment/:blogId", async (req, res) => {
   try {
     if (!req.user) return res.status(401).end();
