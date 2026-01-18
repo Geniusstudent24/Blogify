@@ -2,46 +2,60 @@
 <html>
 <head>
     <title>Secure Reader | Blogify</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs" type="module"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
     <style>
-        body { background-color: #333; margin: 0; padding: 0; overflow-x: hidden; font-family: sans-serif; }
-        #canvas-container { display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        canvas { box-shadow: 0 0 20px rgba(0,0,0,0.5); margin-bottom: 20px; max-width: 95%; height: auto !important; }
-        #loading-message { color: white; text-align: center; margin-top: 50px; font-size: 20px; }
+        body { background-color: #333; margin: 0; padding: 0; overflow-x: hidden; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        #canvas-container { padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; }
+        canvas { box-shadow: 0 4px 20px rgba(0,0,0,0.5); margin-bottom: 20px; max-width: 95%; height: auto !important; border-radius: 4px; }
+        #loading-message { color: white; text-align: center; margin-top: 50px; font-size: 18px; }
+        .error-box { background: #ff4d4d; color: white; padding: 20px; border-radius: 8px; max-width: 500px; text-align: center; margin-top: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .no-copy { user-select: none; -webkit-user-select: none; }
     </style>
 </head>
 <body oncontextmenu="return false;" class="no-copy">
-    <div id="loading-message">Loading Secure Document...</div>
+
+    <div id="loading-message">
+        <i class="fas fa-spinner fa-spin"></i> Loading Document...
+    </div>
+
     <div id="canvas-container"></div>
 
-    <script type="module">
-        // Backend se URL lena
+    <script>
+        // 1. URL Securely Fetch karna (<%- %> use karein taaki URL break na ho)
         const url = "<%- securePdfUrl %>";
-        
-        // PDF.js import karna (v4+ supports native modules)
-        import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs';
+        console.log("Initializing PDF Viewer with URL:", url);
 
-        // Worker path set karna (version must match!)
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs';
+        // 2. Global Library Access (v3 style)
+        const pdfjsLib = window.pdfjsLib;
 
+        // 3. Worker Set karna (Most Important Step)
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // 4. Loading Task Start
         const loadingTask = pdfjsLib.getDocument(url);
 
-        loadingTask.promise.then(pdf => {
-            const container = document.getElementById('canvas-container');
+        loadingTask.promise.then(function(pdf) {
+            console.log('PDF Loaded:', pdf.numPages, 'pages');
+            
+            // Hide Loader
             const loader = document.getElementById('loading-message');
-            if(loader) loader.style.display = 'none';
+            if (loader) loader.style.display = 'none';
 
-            // Har page ko render karna
+            const container = document.getElementById('canvas-container');
+
+            // 5. Har page ko render karna
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                pdf.getPage(pageNum).then(page => {
-                    const scale = 1.5;
-                    const viewport = page.getViewport({ scale });
+                pdf.getPage(pageNum).then(function(page) {
+                    const scale = 1.5; // Zoom Level
+                    const viewport = page.getViewport({ scale: scale });
+
                     const canvas = document.createElement('canvas');
                     const context = canvas.getContext('2d');
-                    
                     canvas.height = viewport.height;
                     canvas.width = viewport.width;
+                    
                     container.appendChild(canvas);
 
                     const renderContext = {
@@ -51,15 +65,24 @@
                     page.render(renderContext);
                 });
             }
-        }).catch(err => {
-            console.error("DETAILED ERROR:", err);
-            document.getElementById('loading-message').innerHTML = `
-                <div style="color: #ff4d4d; background: rgba(255,0,0,0.1); padding: 20px; border-radius: 10px; border: 1px solid red;">
-                    <h3>⚠️ PDF Engine Error</h3>
-                    <p>${err.message}</p>
-                    <p style="font-size: 12px; opacity: 0.7;">Check browser console for more details.</p>
-                </div>
+        }).catch(function(error) {
+            // Error Handling
+            console.error('Error loading PDF:', error);
+            
+            // Hide Loader
+            document.getElementById('loading-message').style.display = 'none';
+            
+            // Show Friendly Error Message
+            const container = document.body;
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-box';
+            errorDiv.innerHTML = `
+                <h3>⚠️ Unable to Load Document</h3>
+                <p>We encountered an issue displaying this file.</p>
+                <p style="font-size: 12px; opacity: 0.8; margin-top: 10px;">Technical Details: ${error.message}</p>
+                <button onclick="location.reload()" style="background: white; color: #ff4d4d; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; margin-top: 10px; font-weight: bold;">Retry</button>
             `;
+            container.appendChild(errorDiv);
         });
     </script>
 </body>
