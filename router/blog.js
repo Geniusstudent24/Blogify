@@ -162,4 +162,15 @@ router.get("/category/:categoryName", async (req, res) => {
   }
 });
 
+router.post("/upload", isAuthenticated, uploads.single("file"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
+
+  res.json({
+    location: req.file.location,
+  });
+});
+
+
 module.exports = { router, setIo };
