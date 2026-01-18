@@ -100,6 +100,14 @@ cron.schedule("0 0 * * *", async () => {
         }
         await Blog.findByIdAndDelete(post._id);
         console.log(`Post "${post.title}" deleted successfully.`);
+        if (post.materialFile) {
+          try {
+            await deleteS3File(post.materialFile);
+            console.log("Material PDF deleted");
+          } catch (err) {
+            console.error("Failed to delete PDF:", err);
+          }
+        }
       }
     } else {
       console.log("No old posts found to delete.");
