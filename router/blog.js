@@ -65,7 +65,7 @@ router.get("/:id", async (req, res) => {
           Bucket: s3BucketName,
           Key: key,
         });
-
+        console.log("Extracted S3 Key:", key);
         const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
         return res.render("pdfViewer", { user: req.user, securePdfUrl });
       } else {
