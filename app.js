@@ -8,7 +8,6 @@ const { Server } = require("socket.io");
 const cron = require("node-cron");
 const axios = require("axios");
 
-const { deleteS3File, s3 } = require("./services/s3-service");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
 
