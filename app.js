@@ -50,7 +50,6 @@ app.use("/user", userRouter);
 app.use("/blog", blogRouterInstance);
 
 app.get("/", async (req, res) => {
-  // .lean() use karein taaki hum object modify kar sakein
   const allBlg = await Blog.find({}).sort({ createdAt: -1 }).lean();
   
   for (const blog of allBlg) {
