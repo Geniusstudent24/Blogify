@@ -516,9 +516,10 @@
         >
           <div class="card h-100">
             <img
-              src="<%= bgl.coverImage %>"
+              src="<%= bgl.secureCoverUrl || bgl.coverImage %>"
               class="card-img-top"
               alt="<%= bgl.title %> Cover"
+              loading="lazy"
             />
             <div class="card-body">
               <h5 class="card-title">
