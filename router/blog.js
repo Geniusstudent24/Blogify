@@ -58,6 +58,7 @@ router.get("/:id", async (req, res) => {
       if (isPDF) {
         const fileUrl = new URL(blog.materialFile);
         const key = fileUrl.pathname.substring(1); 
+        console.log("S3 KEY BEING REQUESTED:", key);
 
         const command = new GetObjectCommand({
           Bucket: s3BucketName,
