@@ -8,6 +8,10 @@ const { Server } = require("socket.io");
 const cron = require("node-cron");
 const axios = require("axios");
 
+const { deleteS3File, s3 } = require("./services/s3-service");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { GetObjectCommand } = require("@aws-sdk/client-s3");
+
 const Blog = require("./model/blog");
 const { chekForAuthenticationCookie } = require("./middleware/auoth");
 const { deleteS3File } = require("./services/s3-service");
@@ -47,7 +51,28 @@ app.use("/user", userRouter);
 app.use("/blog", blogRouterInstance);
 
 app.get("/", async (req, res) => {
-  const allBlg = await Blog.find({}).sort({ createdAt: -1 });
+  // .lean() use karein taaki hum object modify kar sakein
+  const allBlg = await Blog.find({}).sort({ createdAt: -1 }).lean();
+  
+  for (const blog of allBlg) {
+    if (blog.coverImage) {
+      try {
+        const fileUrl = new URL(blog.coverImage);
+        let key = decodeURIComponent(fileUrl.pathname.substring(1));
+        if (key.startsWith(process.env.S3_BUCKET_NAME + "/")) {
+          key = key.replace(process.env.S3_BUCKET_NAME + "/", "");
+        }
+        const command = new GetObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: key,
+        });
+        blog.secureCoverUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+      } catch (error) {
+        console.error("Error signing home cover image:", error);
+        blog.secureCoverUrl = blog.coverImage; 
+      }
+    }
+  }
   res.render("home", {
     user: req.user,
     bgls: allBlg,
