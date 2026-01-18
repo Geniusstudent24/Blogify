@@ -188,7 +188,27 @@ router.get("/category/:categoryName", async (req, res) => {
     const blogsByCategory = await blogs
       .find({ category: req.params.categoryName })
       .populate("createdBy", "firstName photo")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
+
+    for (const blog of blogsByCategory) {
+        if (blog.coverImage) {
+            try {
+                const fileUrl = new URL(blog.coverImage);
+                let key = decodeURIComponent(fileUrl.pathname.substring(1));
+                if (key.startsWith(s3BucketName + "/")) {
+                    key = key.replace(s3BucketName + "/", "");
+                }
+                const command = new GetObjectCommand({
+                    Bucket: s3BucketName,
+                    Key: key,
+                });
+                blog.secureCoverUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+            } catch (error) {
+                blog.secureCoverUrl = blog.coverImage;
+            }
+        }
+    }
 
     res.render("home", {
       user: req.user,
@@ -196,8 +216,8 @@ router.get("/category/:categoryName", async (req, res) => {
       pageCategory: req.params.categoryName,
     });
   } catch (error) {
+    console.log(error);
     res.redirect("/");
   }
 });
-
 module.exports = { router, setIo };
