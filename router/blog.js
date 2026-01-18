@@ -55,32 +55,37 @@ router.get("/:id", async (req, res) => {
     if (req.query.view === "pdf") {
       if (!blog.materialFile) return res.status(404).send("Content file not found");
 
-      // FIX 1: isPDF variable ko define karein
-      const isPDF = blog.materialFile.toLowerCase().endsWith('.pdf'); 
-
+      const isPDF = blog.materialFile.toLowerCase().endsWith(".pdf");
       if (isPDF) {
         try {
             const fileUrl = new URL(blog.materialFile);
-            const key = decodeURIComponent(fileUrl.pathname.substring(1));
-            console.log("S3 KEY REQUESTED:", key);
-    
+            
+            // KEY FIX: Agar pathname mein bucket name hai, toh usse hata do
+            let key = decodeURIComponent(fileUrl.pathname.substring(1)); // Remove leading '/'
+            
+            // Agar URL "s3.amazonaws.com/bucket-name/file.pdf" jaisa hai
+            // toh key abhi "bucket-name/file.pdf" hogi. Humein "bucket-name/" hatana hai.
+            if (key.startsWith(s3BucketName + "/")) {
+                key = key.replace(s3BucketName + "/", "");
+            }
+
+            console.log("FINAL S3 KEY:", key); // Debugging ke liye
+
             const command = new GetObjectCommand({
               Bucket: s3BucketName,
               Key: key,
             });
-            
+
             const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
             return res.render("pdfViewer", { user: req.user, securePdfUrl });
         } catch (s3Error) {
-            console.error("S3/URL Error:", s3Error);
-            return res.status(500).send("Error generating secure link: " + s3Error.message);
+            console.error("S3 Logic Error:", s3Error);
+            return res.status(500).send("Error generating link: " + s3Error.message);
         }
       } else {
-        // Agar PDF nahi hai to direct redirect kar do
         return res.redirect(blog.materialFile);
       }
     }
-
     const comments = await comment.find({ blogId: req.params.id }).populate("createdBy", "firstName photo").sort({ createdAt: -1 });
     return res.render("blog", { user: req.user, bgs: blog, comments });
     
