@@ -4,35 +4,29 @@
     <title>Secure Reader | Blogify</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <style>
-        body { background-color: #333; margin: 0; padding: 20px; font-family: sans-serif; }
-        #canvas-container { display: flex; flex-direction: column; align-items: center; }
-        canvas { box-shadow: 0 0 20px rgba(0,0,0,0.5); margin-bottom: 30px; max-width: 100%; }
+        body { background-color: #333; margin: 0; padding: 0; overflow-x: hidden; }
+        #canvas-container { display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        canvas { box-shadow: 0 0 20px rgba(0,0,0,0.5); margin-bottom: 20px; max-width: 95%; height: auto !important; }
         .no-copy { user-select: none; -webkit-user-select: none; }
+        #loading-message { color: white; text-align: center; margin-top: 50px; font-family: sans-serif; }
     </style>
 </head>
 <body oncontextmenu="return false;" class="no-copy">
+    <div id="loading-message">Loading Document...</div>
     <div id="canvas-container"></div>
 
     <script>
-    // Testing ke liye pehle ye line add karein dekhne ke liye ki JS chal rahi hai
-    document.body.innerHTML += '<h2 style="color:yellow; text-align:center;">Attempting to load PDF...</h2>';
-
     const url = "<%= securePdfUrl %>";
-    console.log("Loading URL:", url);
-
     const pdfjsLib = window['pdfjs-dist/build/pdf'];
-    // Version check - Ensure this match with your script tag src
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
     pdfjsLib.getDocument(url).promise.then(pdf => {
+        document.getElementById('loading-message').style.display = 'none';
         const container = document.getElementById('canvas-container');
-        // Clear the loading message
-        document.body.querySelector('h2').style.display = 'none';
 
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
             pdf.getPage(pageNum).then(page => {
-                const scale = 1.5;
-                const viewport = page.getViewport({ scale });
+                const viewport = page.getViewport({ scale: 1.5 });
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
                 canvas.height = viewport.height;
@@ -42,18 +36,10 @@
             });
         }
     }).catch(err => {
-        // Red Box for error display on Mobile
-        document.body.innerHTML = `
-            <div style="color:white; background:red; padding:20px; margin:20px; border-radius:10px; font-family:sans-serif;">
-                <h3>⚠️ PDF Engine Error:</h3>
-                <p><b>Message:</b> ${err.message}</p>
-                <hr>
-                <p style="word-break: break-all; font-size:10px;">URL: ${url}</p>
-            </div>
-        `;
+        console.error("PDF Load Error:", err);
+        document.getElementById('loading-message').innerHTML = 
+            `<div style="color: #ff4d4d;">Failed to load PDF. Please try again.</div>`;
     });
-</script>
-
-
+    </script>
 </body>
 </html>
