@@ -143,8 +143,11 @@ router.get("/category/:categoryName", async (req, res) => {
 router.post("/", isAuthenticated, uploadFields, async (req, res) => {
   try {
     const { title, body, category, isPrivate } = req.body;
-    const coverImageUrl = req.files["coverImage"] ? req.files["coverImage"][0].location : null;
-    const contentFileUrl = req.files["contentFile"] ? req.files["contentFile"][0].location : null;
+
+    console.log(req.files); // 🔍 debug
+
+    const coverImageUrl = req.files?.coverImage?.[0]?.location || null;
+    const contentFileUrl = req.files?.contentFile?.[0]?.location || null;
 
     const Blog = await blogs.create({
       title,
@@ -152,7 +155,7 @@ router.post("/", isAuthenticated, uploadFields, async (req, res) => {
       category,
       coverImage: coverImageUrl,
       materialFile: contentFileUrl,
-      isPrivate: isPrivate === "true",
+      isPrivate: isPrivate === "on",
       createdBy: req.user._id,
     });
 
@@ -160,8 +163,10 @@ router.post("/", isAuthenticated, uploadFields, async (req, res) => {
       title: Blog.title,
       blogId: Blog._id,
     });
+
     res.json({ success: true, blog: Blog });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, message: "Error" });
   }
 });
