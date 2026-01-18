@@ -2,64 +2,65 @@
 <html>
 <head>
     <title>Secure Reader | Blogify</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs" type="module"></script>
     <style>
-        body { background-color: #333; margin: 0; padding: 0; overflow-x: hidden; }
+        body { background-color: #333; margin: 0; padding: 0; overflow-x: hidden; font-family: sans-serif; }
         #canvas-container { display: flex; flex-direction: column; align-items: center; padding: 20px; }
         canvas { box-shadow: 0 0 20px rgba(0,0,0,0.5); margin-bottom: 20px; max-width: 95%; height: auto !important; }
+        #loading-message { color: white; text-align: center; margin-top: 50px; font-size: 20px; }
         .no-copy { user-select: none; -webkit-user-select: none; }
-        #loading-message { color: white; text-align: center; margin-top: 50px; font-family: sans-serif; font-size: 20px; }
     </style>
 </head>
 <body oncontextmenu="return false;" class="no-copy">
-    <div id="loading-message">Loading Document... Please wait.</div>
+    <div id="loading-message">Loading Secure Document...</div>
     <div id="canvas-container"></div>
 
-    <script>
-    // Backend se aane wala URL check karne ke liye console mein dekhein
-    const url = "<%= securePdfUrl %>";
-    console.log("Loading URL:", url); 
-
-    const pdfjsLib = window['pdfjs-dist/build/pdf'];
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-
-    // PDF load karna shuru
-    const loadingTask = pdfjsLib.getDocument({
-        url: url,
-        withCredentials: false // S3 signed URL ke liye false hi hona chahiye
-    });
-
-    loadingTask.promise.then(pdf => {
-        console.log("PDF Loaded successfully!");
-        const container = document.getElementById('canvas-container');
+    <script type="module">
+        // Backend se URL lena
+        const url = "<%= securePdfUrl %>";
         
-        // FIX: Sahi ID use kar rahe hain yahan
-        const loader = document.getElementById('loading-message');
-        if(loader) loader.style.display = 'none';
+        // PDF.js import karna (v4+ supports native modules)
+        import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs';
 
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-            pdf.getPage(pageNum).then(page => {
-                const viewport = page.getViewport({ scale: 1.5 });
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-                container.appendChild(canvas);
-                
-                page.render({ 
-                    canvasContext: context, 
-                    viewport: viewport 
+        // Worker path set karna (version must match!)
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs';
+
+        const loadingTask = pdfjsLib.getDocument(url);
+
+        loadingTask.promise.then(pdf => {
+            const container = document.getElementById('canvas-container');
+            const loader = document.getElementById('loading-message');
+            if(loader) loader.style.display = 'none';
+
+            // Har page ko render karna
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                pdf.getPage(pageNum).then(page => {
+                    const scale = 1.5;
+                    const viewport = page.getViewport({ scale });
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    container.appendChild(canvas);
+
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    page.render(renderContext);
                 });
-            });
-        }
-    }).catch(err => {
-        console.error("PDF Load Error Details:", err);
-        document.getElementById('loading-message').innerHTML = 
-            `<div style="color: #ff4d4d;">
-                <h3>Failed to load document</h3>
-                <p>${err.message}</p>
-            </div>`;
-    });
+            }
+        }).catch(err => {
+            console.error("DETAILED ERROR:", err);
+            document.getElementById('loading-message').innerHTML = `
+                <div style="color: #ff4d4d; background: rgba(255,0,0,0.1); padding: 20px; border-radius: 10px; border: 1px solid red;">
+                    <h3>⚠️ PDF Engine Error</h3>
+                    <p>${err.message}</p>
+                    <p style="font-size: 12px; opacity: 0.7;">Check browser console for more details.</p>
+                </div>
+            `;
+        });
     </script>
 </body>
 </html>
