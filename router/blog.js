@@ -19,10 +19,17 @@ const uploads = multer({
   storage: multerS3({
     s3: s3,
     bucket: s3BucketName,
-    acl: "private",
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: function (req, file, cb) {
-      cb(null, Date.now().toString() + "-" + file.originalname);
+      const folder = file.fieldname === "coverImage" ? "covers/" : "materials/";
+      cb(null, folder + Date.now() + "-" + file.originalname);
+    },
+    acl: function (req, file, cb) {
+      if (file.fieldname === "coverImage") {
+        cb(null, "public-read");
+      } else {
+        cb(null, "private");
+      }
     },
   }),
 });
@@ -34,14 +41,12 @@ const uploadFields = uploads.fields([
 
 function isAuthenticated(req, res, next) {
   if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-  if (req.user.role === "ADMIN") {
-    return next();
-  }
-  return res.status(403).json({ message: "Forbidden: Admin access only" });
+  if (req.user.role === "ADMIN") return next();
+  return res.status(403).json({ message: "Forbidden" });
 }
 
 router.get("/add", isAuthenticated, (req, res) => {
-  return res.render("addBlog", {
+  res.render("addBlog", {
     user: req.user,
     currentPage: "addBlog",
   });
@@ -53,98 +58,37 @@ router.get("/:id", async (req, res) => {
     if (!blog) return res.status(404).send("Blog not found");
 
     if (req.query.view === "pdf") {
-      if (!blog.materialFile) return res.status(404).send("Content file not found");
+      if (!blog.materialFile) return res.status(404).send("File not found");
 
-      const isPDF = blog.materialFile.toLowerCase().endsWith(".pdf");
-      if (isPDF) {
-        try {
-            const fileUrl = new URL(blog.materialFile);
-            
-            // Step 1: URL se path nikalo
-            let key = decodeURIComponent(fileUrl.pathname.substring(1));
-            
-            // Step 2: CHECK - Agar key mein bucket name shuru mein hai, toh use hata do
-            // Example: "my-bucket/files/doc.pdf" -> "files/doc.pdf"
-            if (key.startsWith(s3BucketName + "/")) {
-                key = key.replace(s3BucketName + "/", "");
-            }
-
-            console.log("FINAL S3 KEY:", key); // Console mein check karein ye sahi file name hona chahiye
-
-            const command = new GetObjectCommand({
-              Bucket: s3BucketName,
-              Key: key,
-            });
-
-            const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
-            return res.render("pdfViewer", { user: req.user, securePdfUrl });
-        } catch (s3Error) {
-            console.error("S3 Logic Error:", s3Error);
-            return res.status(500).send("Error generating link: " + s3Error.message);
-        }
-      } else {
-        return res.redirect(blog.materialFile);
+      const fileUrl = new URL(blog.materialFile);
+      let key = decodeURIComponent(fileUrl.pathname.substring(1));
+      if (key.startsWith(s3BucketName + "/")) {
+        key = key.replace(s3BucketName + "/", "");
       }
+
+      const command = new GetObjectCommand({
+        Bucket: s3BucketName,
+        Key: key,
+      });
+
+      const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+      return res.render("pdfViewer", { user: req.user, securePdfUrl });
     }
-    const comments = await comment.find({ blogId: req.params.id }).populate("createdBy", "firstName photo").sort({ createdAt: -1 });
-    return res.render("blog", { user: req.user, bgs: blog, comments });
-    
-  } catch (error) {
-    // FIX 2: Console mein pura error print karein taaki pata chale hua kya
-    console.error("MAIN SERVER ERROR:", error);
-    res.status(500).send("Internal Server Error");
-  }
-});
 
-router.post("/comment/:blogId", async (req, res) => {
-  try {
-    if (!req.user) return res.status(401).end();
-    const newComment = await comment.create({
-      content: req.body.content,
-      blogId: req.params.blogId,
-      createdBy: req.user._id,
-    });
-    const populatedComment = await newComment.populate("createdBy", "firstName photo");
-    ioInstance.emit("new-comment", {
-      blogId: req.params.blogId,
-      comment: {
-        _id: populatedComment._id,
-        content: populatedComment.content,
-        createdBy: {
-          photo: populatedComment.createdBy.photo,
-          firstName: populatedComment.createdBy.firstName,
-        },
-        createdAt: populatedComment.createdAt,
-      },
-    });
-    res.status(201).end();
-  } catch (error) {
-    res.status(500).json({ message: "Failed to add comment." });
-  }
-});
-
-router.get("/category/:categoryName", async (req, res) => {
-  try {
-    const categoryName = req.params.categoryName;
-    const blogsByCategory = await blogs
-      .find({ category: categoryName })
+    const comments = await comment
+      .find({ blogId: req.params.id })
       .populate("createdBy", "firstName photo")
       .sort({ createdAt: -1 });
-    res.render("home", {
-      user: req.user,
-      bgls: blogsByCategory,
-      pageCategory: categoryName,
-    });
+
+    res.render("blog", { user: req.user, bgs: blog, comments });
   } catch (error) {
-    res.redirect("/");
+    res.status(500).send("Internal Server Error");
   }
 });
 
 router.post("/", isAuthenticated, uploadFields, async (req, res) => {
   try {
     const { title, body, category, isPrivate } = req.body;
-
-    console.log(req.files); // 🔍 debug
 
     const coverImageUrl = req.files?.coverImage?.[0]?.location || null;
     const contentFileUrl = req.files?.contentFile?.[0]?.location || null;
@@ -166,14 +110,56 @@ router.post("/", isAuthenticated, uploadFields, async (req, res) => {
 
     res.json({ success: true, blog: Blog });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Error" });
+    res.status(500).json({ success: false });
   }
 });
 
-router.post("/upload", uploads.single("file"), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No file" });
-  res.json({ location: req.file.location });
+router.post("/comment/:blogId", async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).end();
+
+    const newComment = await comment.create({
+      content: req.body.content,
+      blogId: req.params.blogId,
+      createdBy: req.user._id,
+    });
+
+    const populatedComment = await newComment.populate("createdBy", "firstName photo");
+
+    ioInstance.emit("new-comment", {
+      blogId: req.params.blogId,
+      comment: {
+        _id: populatedComment._id,
+        content: populatedComment.content,
+        createdBy: {
+          photo: populatedComment.createdBy.photo,
+          firstName: populatedComment.createdBy.firstName,
+        },
+        createdAt: populatedComment.createdAt,
+      },
+    });
+
+    res.status(201).end();
+  } catch (error) {
+    res.status(500).json({ message: "Failed" });
+  }
+});
+
+router.get("/category/:categoryName", async (req, res) => {
+  try {
+    const blogsByCategory = await blogs
+      .find({ category: req.params.categoryName })
+      .populate("createdBy", "firstName photo")
+      .sort({ createdAt: -1 });
+
+    res.render("home", {
+      user: req.user,
+      bgls: blogsByCategory,
+      pageCategory: req.params.categoryName,
+    });
+  } catch (error) {
+    res.redirect("/");
+  }
 });
 
 module.exports = { router, setIo };
