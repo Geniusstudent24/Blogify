@@ -386,10 +386,10 @@
           >
             <h1 class="blog-title"><%= bgs.title %></h1>
            <img
-  src="<%= bgs.coverImage %>"
-  class="blog-cover-image"
-  alt="Cover image"
-/>
+              src="<%= typeof secureCoverUrl !== 'undefined' ? secureCoverUrl : bgs.coverImage %>"
+              class="blog-cover-image"
+              alt="Cover image"
+            />
           </header>
 
           <section class="blog-content" data-aos="fade-up">
