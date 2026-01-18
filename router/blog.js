@@ -19,17 +19,10 @@ const uploads = multer({
   storage: multerS3({
     s3: s3,
     bucket: s3BucketName,
+    acl: "private",
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: function (req, file, cb) {
-      const folder = file.fieldname === "coverImage" ? "covers/" : "materials/";
-      cb(null, folder + Date.now() + "-" + file.originalname);
-    },
-    acl: function (req, file, cb) {
-      if (file.fieldname === "coverImage") {
-        cb(null, "public-read");
-      } else {
-        cb(null, "private");
-      }
+      cb(null, Date.now().toString() + "-" + file.originalname);
     },
   }),
 });
@@ -41,12 +34,14 @@ const uploadFields = uploads.fields([
 
 function isAuthenticated(req, res, next) {
   if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-  if (req.user.role === "ADMIN") return next();
-  return res.status(403).json({ message: "Forbidden" });
+  if (req.user.role === "ADMIN") {
+    return next();
+  }
+  return res.status(403).json({ message: "Forbidden: Admin access only" });
 }
 
 router.get("/add", isAuthenticated, (req, res) => {
-  res.render("addBlog", {
+  return res.render("addBlog", {
     user: req.user,
     currentPage: "addBlog",
   });
@@ -54,25 +49,38 @@ router.get("/add", isAuthenticated, (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const blog = await blogs.findById(req.params.id).populate("createdBy", "firstName photo");
+    const blog = await blogs
+      .findById(req.params.id)
+      .populate("createdBy", "firstName photo");
+
     if (!blog) return res.status(404).send("Blog not found");
 
     if (req.query.view === "pdf") {
-      if (!blog.materialFile) return res.status(404).send("File not found");
+      if (!blog.materialFile)
+        return res.status(404).send("Content file not found");
 
-      const fileUrl = new URL(blog.materialFile);
-      let key = decodeURIComponent(fileUrl.pathname.substring(1));
-      if (key.startsWith(s3BucketName + "/")) {
-        key = key.replace(s3BucketName + "/", "");
+      const isPDF = blog.materialFile.toLowerCase().endsWith(".pdf");
+      if (isPDF) {
+        const fileUrl = new URL(blog.materialFile);
+        let key = decodeURIComponent(fileUrl.pathname.substring(1));
+
+        if (key.startsWith(s3BucketName + "/")) {
+          key = key.replace(s3BucketName + "/", "");
+        }
+
+        const command = new GetObjectCommand({
+          Bucket: s3BucketName,
+          Key: key,
+        });
+
+        const securePdfUrl = await getSignedUrl(s3, command, {
+          expiresIn: 3600,
+        });
+
+        return res.render("pdfViewer", { user: req.user, securePdfUrl });
+      } else {
+        return res.redirect(blog.materialFile);
       }
-
-      const command = new GetObjectCommand({
-        Bucket: s3BucketName,
-        Key: key,
-      });
-
-      const securePdfUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
-      return res.render("pdfViewer", { user: req.user, securePdfUrl });
     }
 
     const comments = await comment
@@ -80,8 +88,9 @@ router.get("/:id", async (req, res) => {
       .populate("createdBy", "firstName photo")
       .sort({ createdAt: -1 });
 
-    res.render("blog", { user: req.user, bgs: blog, comments });
+    return res.render("blog", { user: req.user, bgs: blog, comments });
   } catch (error) {
+    console.error(error);
     res.status(500).send("Internal Server Error");
   }
 });
@@ -90,8 +99,13 @@ router.post("/", isAuthenticated, uploadFields, async (req, res) => {
   try {
     const { title, body, category, isPrivate } = req.body;
 
-    const coverImageUrl = req.files?.coverImage?.[0]?.location || null;
-    const contentFileUrl = req.files?.contentFile?.[0]?.location || null;
+    const coverImageUrl = req.files?.coverImage
+      ? req.files.coverImage[0].location
+      : null;
+
+    const contentFileUrl = req.files?.contentFile
+      ? req.files.contentFile[0].location
+      : null;
 
     const Blog = await blogs.create({
       title,
@@ -110,8 +124,14 @@ router.post("/", isAuthenticated, uploadFields, async (req, res) => {
 
     res.json({ success: true, blog: Blog });
   } catch (error) {
-    res.status(500).json({ success: false });
+    console.error(error);
+    res.status(500).json({ success: false, message: "Error" });
   }
+});
+
+router.post("/upload", uploads.single("file"), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No file" });
+  res.json({ location: req.file.location });
 });
 
 router.post("/comment/:blogId", async (req, res) => {
@@ -124,7 +144,10 @@ router.post("/comment/:blogId", async (req, res) => {
       createdBy: req.user._id,
     });
 
-    const populatedComment = await newComment.populate("createdBy", "firstName photo");
+    const populatedComment = await newComment.populate(
+      "createdBy",
+      "firstName photo"
+    );
 
     ioInstance.emit("new-comment", {
       blogId: req.params.blogId,
@@ -141,7 +164,7 @@ router.post("/comment/:blogId", async (req, res) => {
 
     res.status(201).end();
   } catch (error) {
-    res.status(500).json({ message: "Failed" });
+    res.status(500).json({ message: "Failed to add comment." });
   }
 });
 
@@ -161,16 +184,5 @@ router.get("/category/:categoryName", async (req, res) => {
     res.redirect("/");
   }
 });
-
-router.post("/upload", isAuthenticated, uploads.single("file"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "No file uploaded" });
-  }
-
-  res.json({
-    location: req.file.location,
-  });
-});
-
 
 module.exports = { router, setIo };
