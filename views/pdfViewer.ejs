@@ -6,26 +6,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
     <style>
-        body { background-color: #333; margin: 0; padding: 0; overflow-x: hidden; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        #canvas-container { padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; }
+        body { background-color: #333; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; font-family: sans-serif; }
+        #canvas-container { padding: 20px; width: 100%; display: flex; flex-direction: column; align-items: center; }
         canvas { box-shadow: 0 4px 20px rgba(0,0,0,0.5); margin-bottom: 20px; max-width: 95%; height: auto !important; border-radius: 4px; }
-        #loading-message { color: white; text-align: center; margin-top: 50px; font-size: 18px; }
-        .error-box { background: #ff4d4d; color: white; padding: 20px; border-radius: 8px; max-width: 90%; text-align: center; margin-top: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .no-copy { user-select: none; -webkit-user-select: none; }
+        #loading-message { color: white; margin-top: 50px; font-size: 18px; }
+        .error-box { background: #ff4d4d; color: white; padding: 20px; border-radius: 8px; margin-top: 50px; text-align: center; max-width: 500px; }
     </style>
 </head>
-<body oncontextmenu="return false;" class="no-copy">
+<body oncontextmenu="return false;">
 
     <div id="loading-message">
-        <i class="fas fa-spinner fa-spin"></i> Loading Secure Document...
+        <i class="fas fa-spinner fa-spin"></i> Loading Document...
     </div>
 
     <div id="canvas-container"></div>
 
     <script>
-        // URL with unescaped ejs tag
+        // EJS Tag Fix (<%- %>)
         const url = "<%- securePdfUrl %>"; 
-        console.log("Attempting to load:", url);
+        console.log("Loading Secure URL:", url);
 
         const pdfjsLib = window.pdfjsLib;
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -52,22 +51,21 @@
             console.error('PDF Error:', error);
             document.getElementById('loading-message').style.display = 'none';
             
-            // Detailed Error Display
-            const container = document.body;
+            // Detailed Error
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-box';
             
-            let userMsg = "Unable to load document.";
-            if (error.name === "MissingPDFException") userMsg = "File not found (404). Check S3 Key.";
-            if (error.status === 403) userMsg = "Access Denied (403). Check S3 Permissions/Region.";
+            let msg = "Unable to load document.";
+            if (error.name === "MissingPDFException") msg = "File Not Found (404) on Server.";
+            if (error.status === 403) msg = "Access Denied (403). Check S3 Bucket Policy.";
 
             errorDiv.innerHTML = `
-                <h3>⚠️ Error</h3>
-                <p>${userMsg}</p>
-                <p style="font-size: 12px; opacity: 0.8; margin-top: 10px;">${error.message}</p>
-                <button onclick="location.reload()" style="background: white; color: #ff4d4d; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; margin-top: 10px; font-weight: bold;">Retry</button>
+                <h3>⚠️ Error Loading PDF</h3>
+                <p>${msg}</p>
+                <p style="font-size:12px; opacity:0.8">${error.message}</p>
+                <button onclick="location.reload()" style="margin-top:10px; padding:5px 15px; border:none; border-radius:5px; cursor:pointer;">Retry</button>
             `;
-            container.appendChild(errorDiv);
+            document.body.appendChild(errorDiv);
         });
     </script>
 </body>
