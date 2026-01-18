@@ -8,22 +8,34 @@
         #canvas-container { display: flex; flex-direction: column; align-items: center; padding: 20px; }
         canvas { box-shadow: 0 0 20px rgba(0,0,0,0.5); margin-bottom: 20px; max-width: 95%; height: auto !important; }
         .no-copy { user-select: none; -webkit-user-select: none; }
-        #loading-message { color: white; text-align: center; margin-top: 50px; font-family: sans-serif; }
+        #loading-message { color: white; text-align: center; margin-top: 50px; font-family: sans-serif; font-size: 20px; }
     </style>
 </head>
 <body oncontextmenu="return false;" class="no-copy">
-    <div id="loading-message">Loading Document...</div>
+    <div id="loading-message">Loading Document... Please wait.</div>
     <div id="canvas-container"></div>
 
     <script>
-    const url = "<%= securePdfUrl %>"; // Backend se aane wala signed URL
+    // Backend se aane wala URL check karne ke liye console mein dekhein
+    const url = "<%= securePdfUrl %>";
+    console.log("Loading URL:", url); 
+
     const pdfjsLib = window['pdfjs-dist/build/pdf'];
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-    pdfjsLib.getDocument(url).promise.then(pdf => {
+    // PDF load karna shuru
+    const loadingTask = pdfjsLib.getDocument({
+        url: url,
+        withCredentials: false // S3 signed URL ke liye false hi hona chahiye
+    });
+
+    loadingTask.promise.then(pdf => {
+        console.log("PDF Loaded successfully!");
         const container = document.getElementById('canvas-container');
-        // Loading message hata dein
-        document.getElementById('loading-info').style.display = 'none';
+        
+        // FIX: Sahi ID use kar rahe hain yahan
+        const loader = document.getElementById('loading-message');
+        if(loader) loader.style.display = 'none';
 
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
             pdf.getPage(pageNum).then(page => {
@@ -33,13 +45,21 @@
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
                 container.appendChild(canvas);
-                page.render({ canvasContext: context, viewport: viewport });
+                
+                page.render({ 
+                    canvasContext: context, 
+                    viewport: viewport 
+                });
             });
         }
     }).catch(err => {
-        console.error("PDF Load Error:", err);
-        // User ko saaf error message dikhayein
+        console.error("PDF Load Error Details:", err);
+        document.getElementById('loading-message').innerHTML = 
+            `<div style="color: #ff4d4d;">
+                <h3>Failed to load document</h3>
+                <p>${err.message}</p>
+            </div>`;
     });
-</script>
+    </script>
 </body>
 </html>
