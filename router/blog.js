@@ -63,7 +63,7 @@ router.get("/:id", async (req, res) => {
             // KEY FIX: Agar pathname mein bucket name hai, toh usse hata do
             let key = decodeURIComponent(fileUrl.pathname.substring(1)); // Remove leading '/'
             
-            // Agar URL "s3.amazonaws.com/bucket-name/file.pdf" jaisa hai
+            // Agar URL "s3.amazonaws.com/bucket-name/file.pdf" jaisa ha
             // toh key abhi "bucket-name/file.pdf" hogi. Humein "bucket-name/" hatana hai.
             if (key.startsWith(s3BucketName + "/")) {
                 key = key.replace(s3BucketName + "/", "");
