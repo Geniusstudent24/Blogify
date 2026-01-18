@@ -64,12 +64,13 @@ io.on("connection", (socket) => {
   });
 });
 
-cron.schedule("0 0 * * *", async () => {
+cron.schedule("* * * * *", async () => {
   console.log("Running scheduled job: Deleting posts older than 14 days...");
-  const fourteenDaysAgo = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
+  // const fourteenDaysAgo = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
 
   try {
-    const oldPosts = await Blog.find({ createdAt: { $lte: fourteenDaysAgo } });
+    // const oldPosts = await Blog.find({ createdAt: { $lte: fourteenDaysAgo } });
+     const oldPosts = await Blog.find({});
     if (oldPosts.length > 0) {
       for (const post of oldPosts) {
         if (post.coverImage) {
