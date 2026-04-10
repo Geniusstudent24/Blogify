@@ -87,7 +87,7 @@ io.on("connection", (socket) => {
   });
 });
 
-/*cron.schedule("0 0 * * *", async () => {
+cron.schedule("0 0 * * *", async () => {
   console.log("Running scheduled job: Deleting posts older than 14 days...");
   const fourteenDaysAgo = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
 
@@ -115,6 +115,6 @@ io.on("connection", (socket) => {
   } catch (error) {
     console.error("Error during auto-delete cron job:", error);
   }
-});*/
+});
 
 server.listen(PORT, () => console.log("server is started at PORT:", PORT));
