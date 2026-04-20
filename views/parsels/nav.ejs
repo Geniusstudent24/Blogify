@@ -7,11 +7,11 @@
 
 <nav class="navbar navbar-expand-lg sticky-top">
   <div class="container-fluid">
-    <a class="navbar-brand" href="/">
-      <i class="fas fa-feather-alt me-2"></i>
-      <div class="d-flex flex-column" style="line-height: 0.8; align-items: flex-start;">
-        <span style="font-size: 0.65rem; font-weight: 500; color: var(--secondary-color); text-transform: lowercase; letter-spacing: 1px; margin-bottom: 2px;">sssdiit</span>
-        <span>Blogify</span>
+    <a class="navbar-brand d-flex align-items-center" href="/" style="padding: 0;">
+      <i class="fas fa-feather-alt me-2" style="font-size: 1.8rem;"></i>
+      <div class="d-flex flex-column align-items-start" style="line-height: 1.1;">
+        <span style="font-size: 0.7rem; font-weight: 500; color: var(--secondary-color); text-transform: lowercase; letter-spacing: 1px;">sssdiit</span>
+        <span style="font-size: 1.8rem; font-weight: 800; margin-top: -5px;">Blogify</span>
       </div>
     </a>
     <button
@@ -34,6 +34,134 @@
           <a class="nav-link" href="/blog/category/Assignment">Assignments</a>
         </li>
         <li class="nav-item">
+          <a class="nav-link" href="/blog/category/Notice">Notices</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/blog/category/Study Material">Study Material</a>
+        </li>
+
+        <% if (locals.user) { %> 
+            <% if (locals.user.role === 'ADMIN') { %>
+              <li class="nav-item">
+                <a class="nav-link" href="/blog/add">Add Blog</a>
+              </li>
+              <li class="nav-item ms-lg-2">
+                <button id="maintenanceBtn" class="btn btn-outline-danger btn-sm rounded-pill mt-1 py-1 px-3">
+                  <i class="fas fa-power-off me-1"></i> Toggle Maintenance
+                </button>
+              </li>
+            <% } %>
+
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                id="navbarUserDropdown"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <% if (user.photo) { %>
+                <img src="/<%= user.photo %>" alt="Profile" class="navbar-profile-photo me-2" />
+                <% } else { %>
+                <i class="fas fa-user-circle me-2"></i>
+                <% } %> <%= user.firstName %>
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarUserDropdown">
+                <li><a class="dropdown-item" href="/user/profile">Profile</a></li>
+                <li><hr class="dropdown-divider" /></li>
+                <li><a class="dropdown-item" id="logoutLink" href="/user/logout">Logout</a></li>
+              </ul>
+            </li>
+        <% } else { %>
+            <li class="nav-item">
+              <a class="nav-link" href="/user/signup">Create Account</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/user/signin">Sign In</a>
+            </li>
+        <% } %>
+      </ul>
+
+      <form class="d-flex search-form" role="search">
+        <input class="form-control me-2 search-input" type="search" placeholder="Search blogs..." />
+        <button class="btn btn-search" type="submit">
+          <i class="fas fa-search"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+</nav>
+
+<style>
+  :root {
+    --primary-color: #6a00ff;
+    --secondary-color: #a170ff;
+    --accent-color: #00d2ff;
+    --text-dark: #212529;
+    --text-muted: #6c757d;
+    --bg-light: #f0f2f5;
+    --bg-card: #ffffff;
+    --border-radius-md: 12px;
+    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --button-gradient: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    --button-hover-gradient: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+  }
+
+  .navbar { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); padding: 0.8rem 1rem; border-bottom: 1px solid rgba(0, 0, 0, 0.05); }
+  .navbar-brand { font-family: "Montserrat", sans-serif; color: var(--primary-color) !important; }
+  .navbar-nav .nav-link { font-family: "Poppins", sans-serif; font-weight: 500; color: var(--text-dark) !important; margin: 0 10px; transition: all 0.3s ease; }
+  .navbar-nav .nav-link:hover { color: var(--primary-color) !important; transform: translateY(-2px); }
+  .navbar-profile-photo { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color); }
+  .dropdown-menu { border-radius: var(--border-radius-md); box-shadow: var(--shadow-sm); border: none; padding: 10px 0; }
+  .dropdown-item:hover { background-color: var(--primary-color); color: white; }
+  .btn-search { background: var(--button-gradient); border: none; border-radius: var(--border-radius-md); color: white; padding: 8px 15px; font-weight: 600; }
+  .btn-search:hover { background: var(--button-hover-gradient); transform: translateY(-1px); }
+
+  @media (max-width: 992px) {
+    .navbar-nav .nav-link { margin: 5px 0; padding: 8px 0; }
+    .search-form { margin-top: 15px; width: 100%; }
+    .navbar-brand span:last-child { font-size: 1.5rem !important; }
+  }
+</style>
+
+<% if (locals.user && locals.user.role === 'ADMIN') { %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const maintenanceBtn = document.getElementById('maintenanceBtn');
+    if (maintenanceBtn) {
+      maintenanceBtn.addEventListener('click', async () => {
+        const result = await Swal.fire({
+          title: 'Change Site Status?',
+          text: "This will enable or disable access for all non-admin users.",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#6a00ff',
+          confirmButtonText: 'Yes, Toggle it!'
+        });
+
+        if (result.isConfirmed) {
+          try {
+            const res = await fetch('/user/toggle-maintenance', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+              Swal.fire({
+                title: 'Status Updated!',
+                text: `Maintenance mode is now ${data.isMaintenance ? 'ENABLED' : 'DISABLED'}`,
+                icon: 'success',
+                timer: 2000
+              }).then(() => location.reload());
+            }
+          } catch (err) {
+            Swal.fire('Error', 'Failed to update site status.', 'error');
+          }
+        }
+      });
+    }
+  });
+</script>
+<% } %>
           <a class="nav-link" href="/blog/category/Notice">Notices</a>
         </li>
         <li class="nav-item">
