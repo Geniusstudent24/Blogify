@@ -6,7 +6,7 @@ https://github.com/Geniusstudent24/Blogify/blob/main/public/screenshot/Annotatio
 
 A full-stack web application designed to streamline communication within a college or educational institution. This platform allows administrators (teachers) to post assignments, notices, and study materials in a centralized location. Students can view content, engage via comments, and subscribe to real-time push notifications for new updates.
 
-**Live Demo:** [https://blogify-uca1.onrender.com](https://blogify-uca1.onrender.com)
+**Live Demo:**​[Sssdiit Blogify](https://blogify-uca1.onrender.com/)
 
 ---
 
